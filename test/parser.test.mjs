@@ -18,10 +18,13 @@ test('infere disciplinas e dias da semana', () => {
   const { disciplinas, diasConfiaveis } = parseGrade(texto);
   assert.equal(diasConfiaveis, true);
   const m = Object.fromEntries(disciplinas.map(d => [d.codigo, d]));
-  assert.deepEqual(m.EGC5010.encontros, [{ dia: 2, aulas: 2 }]);
-  assert.deepEqual(m.INE5625.encontros, [{ dia: 1, aulas: 2 }, { dia: 3, aulas: 2 }]);
-  assert.deepEqual(m.INE5624.encontros, [{ dia: 2, aulas: 2 }, { dia: 3, aulas: 2 }]);
-  assert.deepEqual(m.INE5680.encontros, [{ dia: 4, aulas: 2 }, { dia: 5, aulas: 2 }]);
+  const resumo = c => m[c].encontros.map(({ dia, aulas }) => ({ dia, aulas }));
+  assert.deepEqual(resumo('EGC5010'), [{ dia: 2, aulas: 2 }]);
+  assert.deepEqual(resumo('INE5625'), [{ dia: 1, aulas: 2 }, { dia: 3, aulas: 2 }]);
+  assert.deepEqual(resumo('INE5624'), [{ dia: 2, aulas: 2 }, { dia: 3, aulas: 2 }]);
+  assert.deepEqual(resumo('INE5680'), [{ dia: 4, aulas: 2 }, { dia: 5, aulas: 2 }]);
+  assert.deepEqual(m.INE5625.encontros[0], { dia: 1, aulas: 2, horas: ['18:30', '19:20'], local: 'CTC/CTC201' });
+  assert.deepEqual(m.INE5680.encontros[1].horas, ['20:20', '21:10']);
   assert.equal(m.INE5680.nome, 'Segurança da Informação e de Redes');
   assert.equal(m.INE5680.professor, 'Carla Merkle Westphall');
 });

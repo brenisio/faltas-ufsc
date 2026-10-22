@@ -79,7 +79,10 @@ function render() {
   $('aviso').hidden = !avisos.length;
 
   renderDisciplinas(cal);
-  if (cal) renderCalendario(cal);
+  if (cal) {
+    renderSemana(cal);
+    renderCalendario(cal);
+  }
 }
 
 function renderDisciplinas(cal) {
@@ -163,6 +166,102 @@ $('disciplinas').addEventListener('change', ev => {
   }
 });
 
+// ---------- semana (estilo agenda) ----------
+
+const SLOTS = ['07:30', '08:20', '09:10', '10:10', '11:00', '13:30', '14:20', '15:10', '16:20', '17:10', '18:30', '19:20', '20:20', '21:10'];
+let segundaRef = null;
+
+function segundaDe(d) {
+  const s = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  s.setDate(s.getDate() - ((s.getDay() + 6) % 7));
+  return s;
+}
+
+function fimAula(h) {
+  const [H, M] = h.split(':').map(Number);
+  const t = H * 60 + M + 50;
+  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+}
+
+function ddmm(d) {
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function semanaInicial(cal) {
+  const hoje = iso(new Date());
+  if (hoje < cal.inicio) return segundaDe(data(cal.inicio));
+  if (hoje > cal.fim) return segundaDe(data(cal.fim));
+  return segundaDe(new Date());
+}
+
+function renderSemana(cal) {
+  segundaRef ??= semanaInicial(cal);
+  const hoje = iso(new Date());
+
+  // blocos: aulas consecutivas da mesma disciplina no mesmo dia viram um bloco só
+  const blocos = [];
+  estado.disciplinas.forEach((disc, i) => {
+    for (const e of disc.encontros) {
+      if (e.dia == null || !e.horas) continue;
+      const idx = e.horas.map(h => SLOTS.indexOf(h)).filter(n => n >= 0).sort((a, b) => a - b);
+      for (let k = 0; k < idx.length; k++) {
+        const b = blocos.at(-1);
+        if (k > 0 && idx[k] === idx[k - 1] + 1 && b) b.fim = idx[k];
+        else blocos.push({ disc, i, dia: e.dia, local: e.local, ini: idx[k], fim: idx[k] });
+      }
+    }
+  });
+
+  const semHoras = estado.disciplinas.some(d => d.encontros.some(e => e.dia != null && !e.horas));
+  const usados = blocos.flatMap(b => [b.ini, b.fim]);
+  const min = usados.length ? Math.min(...usados) : SLOTS.indexOf('18:30');
+  const max = usados.length ? Math.max(...usados) : SLOTS.length - 1;
+
+  const sab = new Date(segundaRef);
+  sab.setDate(sab.getDate() + 5);
+  $('sem-rotulo').textContent = `${ddmm(segundaRef)} a ${ddmm(sab)}` + (semHoras ? ' · reimporte a grade para ver os horários' : '');
+
+  let html = `<div class="sem-canto"></div>`;
+  for (let n = 1; n <= 6; n++) {
+    const d = new Date(segundaRef);
+    d.setDate(d.getDate() + n - 1);
+    const s = iso(d);
+    const feriado = cal.naoLetivos[s];
+    const evento = eventoDoDia(cal, s);
+    const fora = s < cal.inicio || s > cal.fim;
+    const cls = [feriado && 'feriado', fora && 'fora', s === hoje && 'hoje'].filter(Boolean).join(' ');
+    html += `<div class="sem-cab ${cls}" style="grid-column:${n + 1}">
+      <span class="sem-dia">${DIAS_CURTO[n]}</span><span class="sem-num">${d.getDate()}</span>
+      ${feriado ? `<span class="sem-tag feriado">${esc(feriado)}</span>` : evento ? `<span class="sem-tag evento">${esc(evento.texto)}</span>` : fora ? '<span class="sem-tag">sem aulas</span>' : ''}
+    </div>`;
+    html += `<div class="sem-col ${cls}" style="grid-column:${n + 1};grid-row:2 / span ${max - min + 1}"></div>`;
+  }
+  for (let r = min; r <= max; r++) {
+    html += `<div class="sem-hora" style="grid-row:${r - min + 2}">${SLOTS[r]}</div>`;
+  }
+  for (const b of blocos) {
+    const d = new Date(segundaRef);
+    d.setDate(d.getDate() + b.dia - 1);
+    const cancelada = !ehLetivo(cal, d);
+    html += `<div class="sem-aula ${cancelada ? 'cancelada' : ''}" style="--cor: var(--c${b.i % 6});grid-column:${b.dia + 1};grid-row:${b.ini - min + 2} / span ${b.fim - b.ini + 1}"
+      title="${esc(b.disc.nome)}${cancelada ? ' (sem aula)' : ''}">
+      <strong>${esc(b.disc.codigo)}</strong>
+      <span class="sem-nome">${esc(b.disc.nome)}</span>
+      <span class="sem-info">${SLOTS[b.ini]}–${fimAula(SLOTS[b.fim])}${b.local ? ` · ${esc(b.local.replace(/^.*\//, ''))}` : ''}</span>
+    </div>`;
+  }
+  $('semana').style.gridTemplateRows = `auto repeat(${max - min + 1}, minmax(34px, auto))`;
+  $('semana').innerHTML = html;
+}
+
+function moverSemana(dias) {
+  segundaRef.setDate(segundaRef.getDate() + dias);
+  renderSemana(calendario());
+}
+$('sem-ant').onclick = () => moverSemana(-7);
+$('sem-prox').onclick = () => moverSemana(7);
+$('sem-hoje').onclick = () => { segundaRef = semanaInicial(calendario()); renderSemana(calendario()); };
+
 // ---------- calendário ----------
 
 function aulasDoDia(d) {
@@ -231,6 +330,8 @@ $('calendario').addEventListener('click', ev => {
       : 'sem aulas suas');
   } else if (!cal.naoLetivos[s]) partes.push('fora do período letivo');
   $('dia-detalhe').innerHTML = `<strong>${titulo}</strong>: ${partes.join(' · ')}`;
+  segundaRef = segundaDe(d);
+  renderSemana(cal);
 });
 
 render();
