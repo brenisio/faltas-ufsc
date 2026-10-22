@@ -11,11 +11,11 @@ let estado = carregar();
 function carregar() {
   let e;
   try { e = JSON.parse(localStorage.getItem(CHAVE)); } catch { return null; }
+  // versão anterior guardava dias faltados por dia da semana: { [dia]: n, avulsas }
   for (const d of e?.disciplinas ?? []) {
-    const n = e.faltas?.[d.codigo];
-    if (typeof n === 'number') {
-      const primeiro = d.encontros[0];
-      e.faltas[d.codigo] = n ? { [String(primeiro.dia ?? 'x')]: Math.ceil(n / primeiro.aulas) } : {};
+    const f = e.faltas?.[d.codigo];
+    if (f && typeof f === 'object') {
+      e.faltas[d.codigo] = d.encontros.reduce((s, x) => s + (f[String(x.dia ?? 'x')] ?? 0) * x.aulas, f.avulsas ?? 0);
     }
   }
   return e;
@@ -48,7 +48,7 @@ $('btn-importar').onclick = () => {
   try {
     const { perfil, disciplinas, diasConfiaveis } = parseGrade($('texto').value);
     const faltas = {};
-    for (const d of disciplinas) faltas[d.codigo] = estado?.faltas?.[d.codigo] ?? {};
+    for (const d of disciplinas) faltas[d.codigo] = estado?.faltas?.[d.codigo] ?? 0;
     estado = { perfil, disciplinas, diasConfiaveis, faltas, eventos: estado?.eventos ?? [] };
     salvar();
     $('importar').hidden = true;
@@ -94,21 +94,14 @@ function render() {
   }
 }
 
-// Faltas ficam guardadas como "dias faltados" por dia da semana: { [dia]: n }.
-// Faltar um dia = levar falta em todas as aulas da disciplina naquele dia.
-const chaveDia = e => String(e.dia ?? 'x');
+// Faltas = total de aulas faltadas na disciplina (aceita meia falta, por atraso).
+// "Dia inteiro" soma de uma vez as aulas que a disciplina tem num dia.
 
 function faltasDe(d) {
-  const f = estado.faltas[d.codigo];
-  return f && typeof f === 'object' ? f : (estado.faltas[d.codigo] = {});
+  return Number(estado.faltas[d.codigo]) || 0;
 }
 
-function totalFaltas(d) {
-  const f = faltasDe(d);
-  return d.encontros.reduce((s, e) => s + (f[chaveDia(e)] ?? 0) * e.aulas, f.avulsas ?? 0);
-}
-
-// Maior total de faltas alcançável sem passar do limite, faltando dias inteiros.
+// Maior total de faltas alcançável sem passar do limite, faltando só dias inteiros.
 function maxAlcancavel(limite, passos) {
   const ok = [true];
   for (let v = 1; v <= limite; v++) ok[v] = passos.some(p => p <= v && ok[v - p]);
@@ -116,7 +109,11 @@ function maxAlcancavel(limite, passos) {
 }
 
 function plural(n, s, p = s + 's') {
-  return `${n} ${n === 1 ? s : p}`;
+  return `${fmt(n)} ${n === 1 ? s : p}`;
+}
+
+function fmt(n) {
+  return String(n).replace('.', ',');
 }
 
 function renderDisciplinas(cal) {
@@ -127,64 +124,66 @@ function renderDisciplinas(cal) {
 
   $('disciplinas').innerHTML = estado.disciplinas.map((d, i) => {
     const { total, limite } = cal ? limiteFaltas(cal, d.encontros) : { total: 18 * aulasSemana(d), limite: Math.floor(18 * aulasSemana(d) * 0.25) };
-    const passos = d.encontros.map(e => e.aulas);
+    const passos = [...new Set(d.encontros.map(e => e.aulas))].sort((a, b) => b - a);
     const menor = Math.min(...passos);
-    const uniforme = passos.every(p => p === menor);
-    const avulsas = faltasDe(d).avulsas ?? 0;
-    const pratico = maxAlcancavel(Math.max(0, limite - avulsas), passos) + Math.min(avulsas, limite);
-    const faltas = totalFaltas(d);
-    const f = faltasDe(d);
-    const pct = Math.min(100, pratico ? (faltas / pratico) * 100 : 100);
-    const nivel = faltas > limite ? 'reprovado' : faltas + menor > limite ? 'limite' : pct >= 75 ? 'alerta' : 'ok';
+    const faltas = faltasDe(d);
     const sobra = limite - faltas;
+    const pct = Math.min(100, limite ? (faltas / limite) * 100 : 100);
+    const nivel = sobra < 0 ? 'reprovado' : sobra < menor ? 'limite' : pct >= 75 ? 'alerta' : 'ok';
+    const dias = Math.floor(sobra / menor);
     const status = nivel === 'reprovado'
       ? `Passou do limite (${limite}): reprovação por frequência (FI).`
       : nivel === 'limite'
-        ? 'No limite: faltar mais um dia reprova.'
-        : uniforme
-          ? `Pode faltar mais <strong>${plural(Math.floor(sobra / menor), 'dia')}</strong> (${Math.floor(sobra / menor) * menor} faltas).`
-          : `Pode faltar mais <strong>${plural(pratico - faltas, 'falta')}</strong>.`;
+        ? sobra > 0
+          ? `Faltar mais um dia inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'falta')} avulsa${sobra > 1 ? 's' : ''}.`
+          : 'No limite: mais uma falta reprova.'
+        : `Pode faltar mais <strong>${plural(sobra, 'falta')}</strong>` +
+          (passos.length === 1 ? ` (${plural(dias, 'dia')} de ${menor} aulas).` : '.');
+    const soDias = maxAlcancavel(limite, passos);
     const restantes = restantesPorDia
       ? d.encontros.reduce((s, e) => s + (e.dia == null ? 0 : restantesPorDia[e.dia] * e.aulas), 0)
       : null;
+    const cod = esc(d.codigo);
 
     return `
       <article class="cartao disc nivel-${nivel}" style="--cor: var(--c${i % 6})">
         <header>
-          <span class="codigo">${esc(d.codigo)}</span>
+          <span class="codigo">${cod}</span>
           <h3>${esc(d.nome)}</h3>
           <p class="muted">${esc(d.professor)}</p>
         </header>
-        <div class="placar">
-          <span class="numero">${faltas}</span>
-          <span class="muted">de ${pratico} faltas</span>
-        </div>
-        <div class="barra"><span style="width:${pct}%"></span></div>
-        <div class="dias-falta">
-          <div class="dias-falta-cab"><span>Dia inteiro</span><span>dias faltados</span></div>
-          ${d.encontros.map((e, k) => {
-            const nd = f[chaveDia(e)] ?? 0;
-            return `
-            <div class="linha-dia">
-              <select data-cod="${esc(d.codigo)}" data-k="${k}" aria-label="Dia da semana">
+        <div class="encontros">
+          ${d.encontros.map((e, k) => `
+            <label class="chip">
+              <select data-cod="${cod}" data-k="${k}" aria-label="Dia da semana">
                 ${e.dia == null ? '<option value="">dia?</option>' : ''}
                 ${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}" ${e.dia === n ? 'selected' : ''}>${DIAS_CURTO[n]}</option>`).join('')}
               </select>
-              <span class="muted">${plural(e.aulas, 'aula')}</span>
-              <button data-cod="${esc(d.codigo)}" data-k="${k}" data-delta="-1" aria-label="Tirar um dia faltado" ${nd ? '' : 'disabled'}>−</button>
-              <span class="nd" title="dias faltados">${nd}</span>
-              <button data-cod="${esc(d.codigo)}" data-k="${k}" data-delta="1" aria-label="Faltei um dia">+</button>
-            </div>`;
-          }).join('')}
-            <div class="linha-dia avulsas">
-              <span class="muted">Aulas avulsas</span>
-              <button data-cod="${esc(d.codigo)}" data-k="avulsas" data-delta="-1" aria-label="Tirar uma aula avulsa" ${f.avulsas ? '' : 'disabled'}>−</button>
-              <span class="nd" title="aulas avulsas faltadas">${f.avulsas ?? 0}</span>
-              <button data-cod="${esc(d.codigo)}" data-k="avulsas" data-delta="1" aria-label="Faltei uma aula">+</button>
-            </div>
+              ${plural(e.aulas, 'aula')}
+            </label>`).join('')}
+        </div>
+        <div class="placar">
+          <span class="numero">${fmt(faltas)}</span>
+          <span class="muted">de ${limite} faltas</span>
+        </div>
+        <div class="barra"><span style="width:${pct}%"></span></div>
+        <div class="dias-falta">
+          ${passos.map(p => `
+            <div class="linha-dia">
+              <span class="rotulo">Dia inteiro${passos.length > 1 ? ` (${p})` : ''}</span>
+              <button data-cod="${cod}" data-delta="${-p}" aria-label="Tirar um dia de ${p} aulas" ${faltas >= p ? '' : 'disabled'}>−${p}</button>
+              <button data-cod="${cod}" data-delta="${p}" aria-label="Faltei um dia de ${p} aulas">+${p}</button>
+            </div>`).join('')}
+          <div class="linha-dia">
+            <span class="rotulo">Falta</span>
+            <button data-cod="${cod}" data-delta="-0.5" aria-label="Tirar meia falta" ${faltas >= 0.5 ? '' : 'disabled'}>−½</button>
+            <button data-cod="${cod}" data-delta="0.5" aria-label="Meia falta (atraso)">+½</button>
+            <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma falta" ${faltas >= 1 ? '' : 'disabled'}>−1</button>
+            <button data-cod="${cod}" data-delta="1" aria-label="Uma falta">+1</button>
+          </div>
         </div>
         <p class="status">${status}</p>
-        <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${pratico !== limite ? ` (na prática ${pratico}, faltando dias inteiros)` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
+        <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${soDias !== limite ? ` (faltando só dias inteiros, ${soDias})` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
       </article>`;
   }).join('');
 }
@@ -196,10 +195,8 @@ function aulasSemana(d) {
 $('disciplinas').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-delta]');
   if (!b) return;
-  const d = estado.disciplinas.find(x => x.codigo === b.dataset.cod);
-  const f = faltasDe(d);
-  const k = b.dataset.k === 'avulsas' ? 'avulsas' : chaveDia(d.encontros[Number(b.dataset.k)]);
-  f[k] = Math.max(0, (f[k] ?? 0) + Number(b.dataset.delta));
+  const cod = b.dataset.cod;
+  estado.faltas[cod] = Math.max(0, (Number(estado.faltas[cod]) || 0) + Number(b.dataset.delta));
   salvar();
   render();
 });
@@ -208,14 +205,7 @@ $('disciplinas').addEventListener('change', ev => {
   const el = ev.target;
   if (el.matches('select')) {
     const d = estado.disciplinas.find(x => x.codigo === el.dataset.cod);
-    const e = d.encontros[Number(el.dataset.k)];
-    const f = faltasDe(d);
-    const antes = chaveDia(e);
-    e.dia = el.value ? Number(el.value) : null;
-    if (f[antes] != null) {
-      f[chaveDia(e)] = (f[chaveDia(e)] ?? 0) + f[antes];
-      delete f[antes];
-    }
+    d.encontros[Number(el.dataset.k)].dia = el.value ? Number(el.value) : null;
     if (estado.disciplinas.every(x => x.encontros.every(e => e.dia != null))) estado.diasConfiaveis = true;
     salvar();
     render();
