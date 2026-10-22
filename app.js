@@ -105,7 +105,7 @@ function faltasDe(d) {
 
 function totalFaltas(d) {
   const f = faltasDe(d);
-  return d.encontros.reduce((s, e) => s + (f[chaveDia(e)] ?? 0) * e.aulas, 0);
+  return d.encontros.reduce((s, e) => s + (f[chaveDia(e)] ?? 0) * e.aulas, f.avulsas ?? 0);
 }
 
 // Maior total de faltas alcançável sem passar do limite, faltando dias inteiros.
@@ -130,7 +130,8 @@ function renderDisciplinas(cal) {
     const passos = d.encontros.map(e => e.aulas);
     const menor = Math.min(...passos);
     const uniforme = passos.every(p => p === menor);
-    const pratico = maxAlcancavel(limite, passos);
+    const avulsas = faltasDe(d).avulsas ?? 0;
+    const pratico = maxAlcancavel(Math.max(0, limite - avulsas), passos) + Math.min(avulsas, limite);
     const faltas = totalFaltas(d);
     const f = faltasDe(d);
     const pct = Math.min(100, pratico ? (faltas / pratico) * 100 : 100);
@@ -160,6 +161,7 @@ function renderDisciplinas(cal) {
         </div>
         <div class="barra"><span style="width:${pct}%"></span></div>
         <div class="dias-falta">
+          <div class="dias-falta-cab"><span>Dia inteiro</span><span>dias faltados</span></div>
           ${d.encontros.map((e, k) => {
             const nd = f[chaveDia(e)] ?? 0;
             return `
@@ -174,6 +176,12 @@ function renderDisciplinas(cal) {
               <button data-cod="${esc(d.codigo)}" data-k="${k}" data-delta="1" aria-label="Faltei um dia">+</button>
             </div>`;
           }).join('')}
+            <div class="linha-dia avulsas">
+              <span class="muted">Aulas avulsas</span>
+              <button data-cod="${esc(d.codigo)}" data-k="avulsas" data-delta="-1" aria-label="Tirar uma aula avulsa" ${f.avulsas ? '' : 'disabled'}>−</button>
+              <span class="nd" title="aulas avulsas faltadas">${f.avulsas ?? 0}</span>
+              <button data-cod="${esc(d.codigo)}" data-k="avulsas" data-delta="1" aria-label="Faltei uma aula">+</button>
+            </div>
         </div>
         <p class="status">${status}</p>
         <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${pratico !== limite ? ` (na prática ${pratico}, faltando dias inteiros)` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
@@ -190,7 +198,7 @@ $('disciplinas').addEventListener('click', ev => {
   if (!b) return;
   const d = estado.disciplinas.find(x => x.codigo === b.dataset.cod);
   const f = faltasDe(d);
-  const k = chaveDia(d.encontros[Number(b.dataset.k)]);
+  const k = b.dataset.k === 'avulsas' ? 'avulsas' : chaveDia(d.encontros[Number(b.dataset.k)]);
   f[k] = Math.max(0, (f[k] ?? 0) + Number(b.dataset.delta));
   salvar();
   render();
