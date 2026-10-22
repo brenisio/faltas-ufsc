@@ -1,6 +1,6 @@
 <meta charset="utf-8"><body><pre id="res">RODANDO</pre>
 <script type="module">
-import { montarGrade, GRADE_DIURNA } from './montar-grade.mjs';
+import { montarGrade, GRADE_DIURNA, GRADE_CHEIA } from './montar-grade.mjs';
 const res = [];
 const ok = (nome, cond, extra = '') => res.push(`${cond ? 'PASS' : 'FAIL'} ${nome}${extra ? ' — ' + extra : ''}`);
 const espera = ms => new Promise(r => setTimeout(r, ms));
@@ -114,7 +114,7 @@ try {
   d.getElementById('texto').value = montarGrade(GRADE_DIURNA);
   d.getElementById('btn-importar').click(); await espera(200);
   const mtm = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('MTM3101'));
-  ok('diurna: MTM3101 com dias de 4 e 2 aulas', mtm.textContent.includes('Seg 4, Qua 2 aulas'));
+  ok('diurna: MTM3101 com dias de 4 e 2 aulas', mtm.textContent.includes('Seg 4 · Qua 2 (aulas/dia)'));
   ok('diurna: faixa de dias 5–11', mtm.querySelector('.numero').textContent.trim() === '5–11', mtm.querySelector('.numero').textContent);
   ok('diurna: blocos de manhã e tarde na semana', [...d.querySelectorAll('.sem-aula')].some(b => b.textContent.includes('07:30–11:00')) && [...d.querySelectorAll('.sem-aula')].some(b => b.textContent.includes('16:20–18:00')));
   ok('diurna: ECV5215 em 2 blocos separados na terça', [...d.querySelectorAll('.sem-aula')].filter(b => b.textContent.includes('ECV5215')).length === 2);
@@ -128,6 +128,24 @@ try {
   const telaMTM = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('MTM3101')).querySelector('input').value;
   const telaQMC = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('QMC5125')).querySelector('input').value;
   ok('migração: dias antigos viram aulas (4+2+1=7) e 2,5→3', telaMTM === '7' && telaQMC === '3', `${telaMTM}, ${telaQMC}`);
+
+  // seções recolhíveis
+  ok('semana e calendário começam abertos', !d.getElementById('sec-semana').classList.contains('fechada') && !d.getElementById('sec-calendario').classList.contains('fechada'));
+  d.querySelector('#sec-semana .recolher').click();
+  ok('recolher semana esconde o corpo', getComputedStyle(d.getElementById('corpo-semana')).display === 'none');
+  d = await carregar();
+  ok('semana continua recolhida após recarregar', d.getElementById('sec-semana').classList.contains('fechada') && !d.getElementById('sec-calendario').classList.contains('fechada'));
+  d.querySelector('#sec-semana .recolher').click();
+  ok('expandir de novo', getComputedStyle(d.getElementById('corpo-semana')).display !== 'none');
+
+  // grade cheia
+  f.contentWindow.confirm = () => true;
+  d.getElementById('btn-reimportar').click();
+  d.getElementById('texto').value = montarGrade(GRADE_CHEIA);
+  d.getElementById('btn-importar').click(); await espera(200);
+  ok('grade cheia: 12 cards', d.querySelectorAll('.disc').length === 12);
+  ok('grade cheia: 15:10 e 16:20 viram um bloco', [...d.querySelectorAll('.sem-aula')].some(b => b.textContent.includes('15:10–17:10')));
+  ok('grade cheia: 12 cores diferentes', new Set([...d.querySelectorAll('.disc')].map(c => c.getAttribute('style'))).size === 12);
 
   // celular
   f.style.width = '390px'; await espera(200);

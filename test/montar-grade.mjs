@@ -23,3 +23,19 @@ export const GRADE_DIURNA = {
   'QMC5125-03208': { 5: ['10:10', '11:00'], 6: ['08:20', '09:10'] },
   'ECV5215-04208': { 2: ['07:30', '08:20', '16:20', '17:10'] },
 };
+
+// Grade cheia: todos os horários de seg a sáb ocupados, 12 disciplinas.
+const BLOCOS = [['07:30', '08:20'], ['09:10', '10:10'], ['11:00'], ['13:30', '14:20'], ['15:10', '16:20'], ['17:10'], ['18:30', '19:20'], ['20:20', '21:10']];
+export const GRADE_CHEIA = (() => {
+  const g = {};
+  let k = 0;
+  for (let dia = 1; dia <= 6; dia++) {
+    for (const bloco of BLOCOS) {
+      const cod = `DSC${String(1000 + (k++ % 12)).slice(0)}-0${(k % 12) + 1}A`.replace(/-0(\d\d)/, '-$1');
+      const chave = Object.keys(g).find(c => c.startsWith(cod.slice(0, 7))) ?? cod;
+      g[chave] ??= {};
+      (g[chave][dia] ??= []).push(...bloco);
+    }
+  }
+  return g;
+})();

@@ -13,7 +13,7 @@ function blocos(horas) {
   const out = [];
   for (const h of [...horas].sort()) {
     const b = out.at(-1);
-    if (b && min(h) - b.ultimo <= 60) b.ultimo = min(h);
+    if (b && min(h) - b.ultimo <= 70) b.ultimo = min(h);
     else out.push({ ini: h, ultimo: min(h) });
   }
   return out.map(b => ({ ini: b.ini, fim: hhmm(b.ultimo + 50) }));

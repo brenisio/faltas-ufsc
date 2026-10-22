@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseGrade } from '../parser.js';
 import { CALENDARIOS, limiteFaltas } from '../calendario.js';
-import { montarGrade, GRADE_DIURNA } from './montar-grade.mjs';
+import { montarGrade, GRADE_DIURNA, GRADE_CHEIA } from './montar-grade.mjs';
 
 const grade = montarGrade(GRADE_DIURNA);
 
@@ -28,4 +28,15 @@ test('grade diurna: limites', () => {
   assert.deepEqual(lim.FSC5101, { total: 3 * 18 + 3 * 18, limite: 27 });
   assert.deepEqual(lim.QMC5125, { total: 2 * 17 + 2 * 16, limite: 16 });
   assert.deepEqual(lim.ECV5215, { total: 4 * 18, limite: 18 });
+});
+
+test('grade cheia: todos os 84 horários de seg a sáb', () => {
+  const { disciplinas, diasConfiaveis } = parseGrade(montarGrade(GRADE_CHEIA));
+  assert.equal(diasConfiaveis, true);
+  assert.equal(disciplinas.length, 12);
+  const porDia = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of disciplinas) for (const e of d.encontros) porDia[e.dia] += e.aulas;
+  assert.deepEqual(porDia, [0, 14, 14, 14, 14, 14, 14]);
+  const d0 = disciplinas.find(d => d.codigo === 'DSC1000');
+  assert.deepEqual(d0.encontros.map(e => [e.dia, e.horas]), [[1, ['07:30', '08:20']], [2, ['15:10', '16:20']], [4, ['07:30', '08:20']], [5, ['15:10', '16:20']]]);
 });
