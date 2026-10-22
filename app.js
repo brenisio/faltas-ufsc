@@ -132,7 +132,6 @@ function renderDisciplinas(cal) {
     const maior = Math.max(...passos);
     const diasMin = Math.max(0, Math.floor(sobra / maior));
     const diasMax = Math.max(0, Math.floor(sobra / menor));
-    const diasTxt = diasMin === diasMax ? `${diasMax}` : `${diasMin}–${diasMax}`;
     const status = nivel === 'reprovado'
       ? `Passou do limite (${limite} faltas): reprovação por frequência (FI).`
       : nivel === 'limite'
@@ -140,8 +139,8 @@ function renderDisciplinas(cal) {
           ? `Faltar mais um dia inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'falta')} (atrasos).`
           : 'No limite: mais uma falta reprova.'
         : passos.length > 1
-          ? `${diasMax} dias se forem dias de ${menor} aulas, ${diasMin} se forem de ${maior}.`
-          : `Cada dia faltado = ${menor} faltas.`;
+          ? `Dá <strong>${diasMin}–${diasMax} dias</strong> de aula (dias de ${maior} ou ${menor} aulas).`
+          : `Dá <strong>${plural(diasMax, 'dia')}</strong> de aula inteiro${diasMax === 1 ? '' : 's'} (${menor} aulas por dia).`;
     const soDias = maxAlcancavel(limite, passos);
     const restantes = restantesPorDia
       ? d.encontros.reduce((s, e) => s + (e.dia == null ? 0 : restantesPorDia[e.dia] * e.aulas), 0)
@@ -167,8 +166,8 @@ function renderDisciplinas(cal) {
           ${resumoDias(d)}
         </div>
         <div class="placar">
-          <span class="numero">${nivel === 'reprovado' ? '—' : diasTxt}</span>
-          <span class="muted">${nivel === 'reprovado' ? 'reprovado por falta' : `dia${diasMax === 1 ? '' : 's'} que ainda dá pra faltar`}</span>
+          <span class="numero">${nivel === 'reprovado' ? '—' : sobra}</span>
+          <span class="muted">${nivel === 'reprovado' ? 'reprovado por falta' : `falta${sobra === 1 ? '' : 's'} pra gastar`}</span>
         </div>
         <div class="barra"><span style="width:${pct}%"></span></div>
         <p class="faltas-txt"><strong>${faltas}</strong> de ${limite} faltas</p>
