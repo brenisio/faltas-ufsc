@@ -56,19 +56,20 @@
       <p id="aviso" class="aviso" hidden></p>
       <div id="disciplinas" class="grade-disc"></div>
 
-      <section class="cartao">
+      <section class="cartao recolhivel" id="sec-semana">
         <div class="semana-topo">
           <div>
-            <h2>Semana</h2>
+            <button class="recolher" aria-expanded="true" aria-controls="corpo-semana"><span class="seta" aria-hidden="true"></span><h2>Semana</h2></button>
             <p id="sem-rotulo" class="muted"></p>
           </div>
-          <div class="nav">
+          <div class="nav so-aberto">
             <button id="btn-evento" class="primario">+ Evento</button>
             <button id="sem-ant" aria-label="Semana anterior">‹</button>
             <button id="sem-hoje">Hoje</button>
             <button id="sem-prox" aria-label="Próxima semana">›</button>
           </div>
         </div>
+        <div class="corpo" id="corpo-semana">
         <form id="form-evento" class="form-evento" hidden>
           <label>Data <input type="date" id="ev-data" required></label>
           <label>Tipo
@@ -86,10 +87,12 @@
           </div>
         </form>
         <div class="semana-scroll"><div id="semana" class="semana"></div></div>
+        </div>
       </section>
 
-      <section class="cartao">
-        <h2>Calendário <span id="cal-rotulo" class="muted"></span></h2>
+      <section class="cartao recolhivel" id="sec-calendario">
+        <button class="recolher" aria-expanded="true" aria-controls="corpo-calendario"><span class="seta" aria-hidden="true"></span><h2>Calendário <span id="cal-rotulo" class="muted"></span></h2></button>
+        <div class="corpo" id="corpo-calendario">
         <div class="legenda">
           <span><i class="bolinha aula"></i>dia com aula</span>
           <span><i class="bolinha feriado"></i>feriado / não letivo</span>
@@ -100,6 +103,7 @@
         <p id="dia-detalhe" class="dia-detalhe muted">Toque num dia para ver as aulas.</p>
         <h3>Próximas datas</h3>
         <ul id="feriados" class="feriados"></ul>
+        </div>
       </section>
     </section>
   </main>

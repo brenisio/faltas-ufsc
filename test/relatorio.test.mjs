@@ -29,3 +29,11 @@ for (const [nome, texto] of [
     assert.deepEqual(volta.eventos.map(({ id, ...e }) => e), estado.eventos.map(({ id, ...e }) => e));
   });
 }
+
+test('relatório → backup completo (grade cheia)', async () => {
+  const { GRADE_CHEIA } = await import('./montar-grade.mjs');
+  const g = parseGrade(montarGrade(GRADE_CHEIA));
+  const estado = { ...g, faltas: { DSC1000: 3 }, eventos: [] };
+  const volta = lerRelatorio(montarRelatorio(estado, situacao, '2026.2'));
+  assert.deepEqual(volta.disciplinas, g.disciplinas);
+});

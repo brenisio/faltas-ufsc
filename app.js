@@ -200,7 +200,7 @@ function renderDisciplinas(cal) {
       </select>` : '').join('');
 
     return `
-      <article class="cartao disc nivel-${nivel}" style="--cor: var(--c${i % 6})">
+      <article class="cartao disc nivel-${nivel}" style="--cor: var(--c${i % 12})">
         <div class="disc-topo">
           <span class="codigo"><i class="ponto"></i>${cod}</span>
           ${selo ? `<span class="selo">${selo}</span>` : ''}
@@ -239,7 +239,7 @@ function resumoDias(d) {
   const uniforme = conhecidos.every(e => e.aulas === conhecidos[0].aulas);
   return uniforme
     ? `${conhecidos.map(e => DIAS_CURTO[e.dia]).join(', ')} · ${conhecidos[0].aulas} aulas/dia`
-    : conhecidos.map(e => `${DIAS_CURTO[e.dia]} ${e.aulas}`).join(', ') + ' aulas';
+    : conhecidos.map(e => `${DIAS_CURTO[e.dia]} ${e.aulas}`).join(' · ') + ' (aulas/dia)';
 }
 
 function aulasSemana(d) {
@@ -306,7 +306,7 @@ function renderSemana(cal) {
   segundaRef ??= semanaInicial(cal);
   const hoje = iso(new Date());
 
-  // blocos: aulas seguidas (intervalo de até 10 min) da mesma disciplina no mesmo dia viram um bloco só
+  // blocos: aulas seguidas (intervalo de até 20 min, ex.: 15:10 → 16:20) da mesma disciplina no mesmo dia viram um bloco só
   const blocos = [];
   estado.disciplinas.forEach((disc, i) => {
     for (const e of disc.encontros) {
@@ -314,7 +314,7 @@ function renderSemana(cal) {
       const idx = e.horas.map(h => SLOTS.indexOf(h)).filter(n => n >= 0).sort((a, b) => a - b);
       for (let k = 0; k < idx.length; k++) {
         const b = blocos.at(-1);
-        if (k > 0 && b && minutos(SLOTS[idx[k]]) - minutos(SLOTS[idx[k - 1]]) <= 60) b.fim = idx[k];
+        if (k > 0 && b && minutos(SLOTS[idx[k]]) - minutos(SLOTS[idx[k - 1]]) <= 70) b.fim = idx[k];
         else blocos.push({ disc, i, dia: e.dia, local: e.local, ini: idx[k], fim: idx[k] });
       }
     }
@@ -351,7 +351,7 @@ function renderSemana(cal) {
     const d = new Date(segundaRef);
     d.setDate(d.getDate() + b.dia - 1);
     const cancelada = !ehLetivo(cal, d);
-    html += `<div class="sem-aula ${cancelada ? 'cancelada' : ''}" style="--cor: var(--c${b.i % 6});grid-column:${b.dia + 1};grid-row:${b.ini - min + L0} / span ${b.fim - b.ini + 1}"
+    html += `<div class="sem-aula ${cancelada ? 'cancelada' : ''}" style="--cor: var(--c${b.i % 12});grid-column:${b.dia + 1};grid-row:${b.ini - min + L0} / span ${b.fim - b.ini + 1}"
       title="${esc(b.disc.nome)}${cancelada ? ' (sem aula)' : ''}">
       <strong>${esc(b.disc.codigo)}</strong>
       <span class="sem-nome">${esc(b.disc.nome)}</span>
@@ -389,7 +389,7 @@ function meusEventos(s) {
 // Evento ligado a uma disciplina usa a cor dela.
 function corDoEvento(e) {
   const i = estado.disciplinas.findIndex(d => d.codigo === e.codigo);
-  return i >= 0 ? `--meu: var(--c${i % 6}); --meu-bg: color-mix(in srgb, var(--c${i % 6}) 22%, var(--card))` : '';
+  return i >= 0 ? `--meu: var(--c${i % 12}); --meu-bg: color-mix(in srgb, var(--c${i % 12}) 22%, var(--card))` : '';
 }
 
 function rotuloMeu(e) {
@@ -465,7 +465,7 @@ $('calendario').addEventListener('click', ev => {
   if (ehLetivo(cal, d)) {
     const aulas = aulasDoDia(d);
     partes.push(aulas.length
-      ? aulas.map(a => `<span class="tag" style="--cor: var(--c${a.i % 6})">${esc(a.disc.codigo)}</span> ${a.n} aula${a.n > 1 ? 's' : ''}`).join(' · ')
+      ? aulas.map(a => `<span class="tag" style="--cor: var(--c${a.i % 12})">${esc(a.disc.codigo)}</span> ${a.n} aula${a.n > 1 ? 's' : ''}`).join(' · ')
       : 'sem aulas suas');
   } else if (!cal.naoLetivos[s]) partes.push('fora do período letivo');
   $('dia-detalhe').innerHTML = `<strong>${titulo}</strong>: ${partes.join(' · ')}`;
@@ -512,6 +512,27 @@ $('feriados').addEventListener('click', ev => {
   salvar();
   render();
 });
+
+// ---------- seções recolhíveis (abertas por padrão; lembra a escolha) ----------
+
+const CHAVE_RECOLHIDAS = 'faltas-ufsc:recolhidas';
+function recolhidas() {
+  try { return JSON.parse(localStorage.getItem(CHAVE_RECOLHIDAS)) ?? []; } catch { return []; }
+}
+function aplicarRecolhida(sec, fechada) {
+  sec.classList.toggle('fechada', fechada);
+  sec.querySelector('.recolher').setAttribute('aria-expanded', String(!fechada));
+}
+for (const sec of document.querySelectorAll('.recolhivel')) {
+  aplicarRecolhida(sec, recolhidas().includes(sec.id));
+  sec.querySelector('.recolher').onclick = () => {
+    const fechada = !sec.classList.contains('fechada');
+    aplicarRecolhida(sec, fechada);
+    const lista = recolhidas().filter(id => id !== sec.id);
+    if (fechada) lista.push(sec.id);
+    try { localStorage.setItem(CHAVE_RECOLHIDAS, JSON.stringify(lista)); } catch { /* nada */ }
+  };
+}
 
 // ---------- tema ----------
 
