@@ -76,6 +76,28 @@ try {
   ok('feriado de hoje no aviso', d.getElementById('sem-agora').textContent.includes('Dia do Servidor'));
   d = await carregar();
 
+  // estabilidade: trocar de semana pelo calendário não mexe na página
+  {
+    const ev = JSON.parse(f.contentWindow.localStorage.getItem('faltas-ufsc:v1'));
+    ev.eventos = [1, 2, 3].map(n => ({ id: 'e' + n, data: '2026-11-20', tipo: 'outro', codigo: '', texto: 'Lembrete ' + n }));
+    f.contentWindow.localStorage.setItem('faltas-ufsc:v1', JSON.stringify(ev));
+    d = await carregar();
+    const pos = () => [d.getElementById('sec-calendario').getBoundingClientRect().top + f.contentWindow.scrollY, d.documentElement.scrollHeight].join(',');
+    const ref = pos();
+    const dias = ['2026-11-22', '2026-10-28', '2026-12-08', '2026-12-14', '2026-11-20', '2026-08-10', '2026-09-07'];
+    const mudou = [];
+    for (const dia of dias) {
+      d.querySelector(`[data-dia="${dia}"]`).click(); await espera(30);
+      if (pos() !== ref) mudou.push(`${dia}: ${pos()} ≠ ${ref}`);
+    }
+    ok('clicar dias no calendário não desloca a página', mudou.length === 0, mudou.join(' | '));
+    d.querySelector('[data-dia="2026-11-20"]').click(); await espera(30);
+    ok('feriado + 3 eventos no dia viram 1 chip + "+3"', [...d.querySelectorAll('.chip-ev.mais')].some(c => c.textContent === '+3'));
+    ev.eventos = [];
+    f.contentWindow.localStorage.setItem('faltas-ufsc:v1', JSON.stringify(ev));
+    d = await carregar();
+  }
+
   // eventos
   d.getElementById('btn-evento').click(); await espera(50);
   d.getElementById('ev-data').value = '2026-11-08'; // domingo
