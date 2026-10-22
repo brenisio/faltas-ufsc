@@ -12,6 +12,6 @@ Tudo roda no navegador; as faltas ficam salvas em `localStorage`. O botão "Copi
 ## Desenvolvimento
 
 Site estático sem build. Para rodar local: `python3 -m http.server` e abrir `http://localhost:8000`.
-Testes do parser e do calendário: `npm test`.
+Testes do parser, calendário e relatório: `npm test`. Teste de ponta a ponta no navegador: subir o servidor local e abrir `http://localhost:8000/test/e2e.html` (mostra PASS/FAIL de cada fluxo).
 
 Novo semestre: adicionar o calendário em `calendario.js` (início, fim, dias não letivos).
