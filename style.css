@@ -98,8 +98,8 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding-top: 28px;
-  padding-bottom: 28px;
+  padding-top: 20px;
+  padding-bottom: 18px;
 }
 .marca-bloco { display: flex; flex-direction: column; gap: 2px; }
 .logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.03em; }
@@ -116,9 +116,9 @@ a { color: inherit; text-underline-offset: 3px; }
 .cartao {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 20px;
-  margin-bottom: 16px;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
   box-shadow: var(--sombra);
 }
 
@@ -182,10 +182,10 @@ textarea {
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  margin: 0 0 20px;
+  margin: 0 0 14px;
 }
 .perfil > div:first-child { display: flex; flex-direction: column; }
-#p-nome { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.02em; }
+#p-nome { font-size: 1.2rem; font-weight: 600; letter-spacing: -0.02em; }
 #p-detalhes { font-size: 0.85rem; }
 .perfil .acoes { margin-top: 0; }
 
@@ -194,13 +194,13 @@ textarea {
   --cols: 3;
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 16px;
 }
 @media (max-width: 880px) { .grade-disc { grid-template-columns: repeat(min(var(--cols), 2), minmax(0, 1fr)); } }
 @media (max-width: 540px) { .grade-disc { grid-template-columns: 1fr; } }
 
-.disc { margin: 0; padding: 18px; display: flex; flex-direction: column; }
+.disc { margin: 0; padding: 14px 16px; display: flex; flex-direction: column; }
 .disc-topo { display: flex; justify-content: space-between; align-items: center; min-height: 22px; }
 .codigo {
   display: inline-flex;
@@ -216,9 +216,9 @@ textarea {
 .nivel-limite .selo, .nivel-reprovado .selo { color: var(--bad); background: var(--bad-bg); }
 
 .disc h3 {
-  margin-top: 10px;
-  min-height: 2.7em;
-  line-height: 1.35;
+  margin-top: 6px;
+  line-height: 1.3;
+  min-height: 2.6em; /* alinha os números entre cards com nome de 1 ou 2 linhas */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -242,9 +242,9 @@ textarea {
   margin-right: 4px;
 }
 
-.placar { display: flex; align-items: baseline; gap: 8px; margin-top: 22px; }
+.placar { display: flex; align-items: baseline; gap: 6px; margin-top: 12px; }
 .placar .numero {
-  font-size: 2.6rem;
+  font-size: 2rem;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -255,7 +255,7 @@ textarea {
 .nivel-alerta .placar .numero { color: var(--warn); }
 .nivel-limite .placar .numero, .nivel-reprovado .placar .numero { color: var(--bad); }
 
-.barra { height: 4px; background: var(--sutil); border-radius: 999px; overflow: hidden; margin-top: 14px; }
+.barra { height: 4px; background: var(--sutil); border-radius: 999px; overflow: hidden; margin-top: 10px; }
 .barra span { display: block; height: 100%; background: var(--text); border-radius: 999px; transition: width .25s; }
 .nivel-alerta .barra span { background: var(--warn); }
 .nivel-limite .barra span, .nivel-reprovado .barra span { background: var(--bad); }
@@ -273,8 +273,8 @@ textarea {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-top: 18px;
-  padding-top: 14px;
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--line);
   font-size: 0.82rem;
   color: var(--muted);
@@ -290,8 +290,8 @@ textarea {
 .stepper button {
   border: 0;
   border-radius: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   font-size: 1rem;
   background: transparent;
@@ -299,7 +299,7 @@ textarea {
 }
 .stepper button:disabled { color: var(--fraco); cursor: default; }
 .stepper input {
-  width: 40px;
+  width: 36px;
   border: 0;
   border-left: 1px solid var(--line);
   border-right: 1px solid var(--line);
@@ -312,13 +312,13 @@ textarea {
 }
 .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-.status { margin: 10px 0 0; font-size: 0.8rem; color: var(--bad); }
-.rodape { margin: auto 0 0; padding-top: 12px; font-size: 0.72rem; color: var(--fraco); }
+.status { margin: 8px 0 0; font-size: 0.8rem; color: var(--bad); }
+.rodape { margin: auto 0 0; padding-top: 8px; font-size: 0.72rem; color: var(--fraco); }
 
 /* semana */
 .semana-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .semana-topo h2 { margin: 0; }
-.semana-topo p { margin: 2px 0 14px; font-size: 0.82rem; }
+.semana-topo p { margin: 0 0 8px; font-size: 0.82rem; }
 .nav { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .nav button { padding: 6px 11px; }
 .semana-scroll { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
@@ -328,13 +328,13 @@ textarea {
   column-gap: 4px;
   min-width: 620px;
 }
-.sem-cab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 2px 10px; grid-row: 1; }
+.sem-cab { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 0 2px 6px; grid-row: 1; }
 .sem-dia { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
 .sem-num {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  width: 2em;
-  height: 2em;
+  width: 1.9em;
+  height: 1.9em;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -365,11 +365,11 @@ textarea {
 .sem-col { border-radius: 6px; border-top: 1px solid var(--line); }
 .sem-col.feriado { background: repeating-linear-gradient(135deg, var(--feriado-bg) 0 6px, transparent 6px 12px); }
 .sem-col.fora, .sem-col.hoje { background: var(--sutil); }
-.sem-hora { grid-column: 1; font-size: 0.68rem; color: var(--fraco); padding-top: 4px; font-variant-numeric: tabular-nums; }
+.sem-hora { grid-column: 1; font-size: 0.66rem; color: var(--fraco); padding-top: 3px; font-variant-numeric: tabular-nums; }
 .sem-aula {
-  margin: 3px 0;
-  padding: 7px 8px;
-  border-radius: 7px;
+  margin: 2px 0;
+  padding: 5px 7px;
+  border-radius: 6px;
   background: var(--card);
   border: 1px solid var(--line);
   border-left: 3px solid var(--cor);
@@ -414,25 +414,25 @@ textarea {
 @media (max-width: 600px) { .form-evento { grid-template-columns: 1fr; } }
 
 /* calendário do semestre */
-.legenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted); margin-bottom: 16px; }
+.legenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.72rem; color: var(--muted); margin-bottom: 12px; }
 .bolinha { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
 .bolinha.aula { background: var(--line-forte); }
 .bolinha.feriado { background: var(--bad); }
 .bolinha.evento { background: var(--warn); }
 .bolinha.meu { background: var(--meu); border-radius: 50%; }
 
-.meses { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-.mes h4 { margin: 0 0 8px; font-size: 0.82rem; font-weight: 600; }
-.dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.cab { font-size: 0.65rem; text-align: center; color: var(--fraco); padding-bottom: 2px; }
+.meses { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px 18px; }
+.mes h4 { margin: 0 0 4px; font-size: 0.78rem; font-weight: 600; }
+.dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.cab { font-size: 0.6rem; text-align: center; color: var(--fraco); }
 .dia {
-  aspect-ratio: 1;
+  height: 24px;
   padding: 0;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 400;
   border: 1px solid transparent;
   background: transparent;
-  border-radius: 6px;
+  border-radius: 5px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -443,14 +443,14 @@ textarea {
 .dia.passado:not(.hoje) { opacity: 0.5; }
 .dia.hoje { border-color: var(--text); color: var(--text); font-weight: 700; }
 .dia.meu { position: relative; }
-.dia.meu::after { content: ""; position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; border-radius: 50%; background: var(--meu); }
+.dia.meu::after { content: ""; position: absolute; top: 2px; right: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--meu); }
 
-.dia-detalhe { margin: 16px 0 0; min-height: 1.5em; font-size: 0.85rem; }
+.dia-detalhe { margin: 12px 0 0; min-height: 1.5em; font-size: 0.85rem; }
 .tag { font: 500 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--cor); }
 
-.cartao h3:not(.disc h3) { margin-top: 22px; font-size: 0.85rem; }
+.cartao h3:not(.disc h3) { margin-top: 16px; font-size: 0.82rem; }
 .feriados { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.85rem; }
-.feriados li { padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+.feriados li { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
 .feriados li:last-child { border-bottom: 0; }
 .feriados li span { min-width: 92px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .feriados li.feriado span { color: var(--bad); }
