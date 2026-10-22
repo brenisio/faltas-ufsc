@@ -1,0 +1,142 @@
+<meta charset="utf-8"><body><pre id="res">RODANDO</pre>
+<script type="module">
+import { montarGrade, GRADE_DIURNA } from './montar-grade.mjs';
+const res = [];
+const ok = (nome, cond, extra = '') => res.push(`${cond ? 'PASS' : 'FAIL'} ${nome}${extra ? ' — ' + extra : ''}`);
+const espera = ms => new Promise(r => setTimeout(r, ms));
+localStorage.clear();
+const f = document.createElement('iframe'); f.style.width = '1200px'; f.style.height = '900px';
+const erros = [];
+async function carregar() {
+  await new Promise(r => { f.onload = r; f.src = '../index.html?' + Math.random(); if (!f.isConnected) document.body.append(f); });
+  f.contentWindow.addEventListener('error', e => erros.push(e.message));
+  await espera(300);
+  return f.contentDocument;
+}
+const st = () => JSON.parse(f.contentWindow.localStorage.getItem('faltas-ufsc:v1'));
+try {
+  let d = await carregar();
+  ok('tela inicial mostra importação', !d.getElementById('importar').hidden && d.getElementById('painel').hidden);
+  ok('aviso de celular visível', !!d.querySelector('.dica-celular'));
+
+  // erro com texto inválido
+  d.getElementById('texto').value = 'lixo qualquer';
+  d.getElementById('btn-importar').click(); await espera(100);
+  ok('texto inválido mostra erro', !d.getElementById('erro').hidden, d.getElementById('erro').textContent);
+
+  // importa grade noturna
+  d.getElementById('texto').value = await (await fetch('grade-exemplo.txt')).text();
+  d.getElementById('btn-importar').click(); await espera(200);
+  ok('importa grade e mostra 4 cards', d.querySelectorAll('.disc').length === 4);
+  ok('perfil exibido', d.getElementById('p-nome').textContent === 'Fulano de Tal da Silva');
+  ok('cards em 4 colunas', getComputedStyle(d.getElementById('disciplinas')).gridTemplateColumns.split(' ').length === 4);
+
+  // contador
+  const card = () => [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('EGC5010'));
+  card().querySelector('button[data-delta="1"]').click(); card().querySelector('button[data-delta="1"]').click(); await espera(50);
+  ok('+ soma faltas', st().faltas.EGC5010 === 2);
+  card().querySelector('button[data-delta="-1"]').click(); await espera(50);
+  ok('− tira falta', st().faltas.EGC5010 === 1);
+  const inp = card().querySelector('input[type=number]'); inp.value = '8'; inp.dispatchEvent(new Event('change', { bubbles: true })); await espera(50);
+  ok('campo de aulas perdidas', st().faltas.EGC5010 === 8);
+  ok('EGC5010 no limite com 8/9', card().classList.contains('nivel-limite') && card().querySelector('.numero').textContent.trim() === '0');
+  inp.value = '10'; card().querySelector('input').dispatchEvent(new Event('change', { bubbles: true }));
+  const inp2 = card().querySelector('input'); inp2.value = '10'; inp2.dispatchEvent(new Event('change', { bubbles: true })); await espera(50);
+  ok('reprovado com 10/9', card().classList.contains('nivel-reprovado'));
+  const inp3 = card().querySelector('input'); inp3.value = '-5'; inp3.dispatchEvent(new Event('change', { bubbles: true })); await espera(50);
+  ok('valor negativo vira 0', st().faltas.EGC5010 === 0);
+  const ine = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('INE5625'));
+  ok('INE5625: 8 dias e limite 16', ine.querySelector('.numero').textContent.trim() === '8' && ine.textContent.includes('limite 16 aulas'));
+
+  // persistência
+  d = await carregar();
+  ok('dados persistem após recarregar', d.querySelectorAll('.disc').length === 4 && st().faltas.EGC5010 === 0);
+
+  // semana
+  ok('semana tem 7 dias', d.querySelectorAll('.sem-cab').length === 7);
+  ok('semana mostra 7 blocos de aula', d.querySelectorAll('.sem-aula').length === 7, String(d.querySelectorAll('.sem-aula').length));
+  d.querySelector('[data-dia="2026-10-28"]').click(); await espera(50);
+  ok('clicar 28/10 vai pra semana com feriado', d.getElementById('sem-rotulo').textContent.startsWith('26/10') && !!d.querySelector('.chip-ev.feriado'));
+  ok('aulas do feriado aparecem canceladas', d.querySelectorAll('.sem-aula.cancelada').length === 2);
+  d.querySelector('[data-dia="2026-12-08"]').click(); await espera(50);
+  ok('recuperação aparece na semana', [...d.querySelectorAll('.chip-ev.evento')].some(c => c.textContent.includes('recuperação')));
+  d.getElementById('sem-prox').click(); await espera(50);
+  ok('semana após o fim mostra fora do semestre', !!d.querySelector('.chip-ev.fora'));
+  d.getElementById('sem-hoje').click(); await espera(50);
+  ok('botão Hoje volta pra semana atual', !!d.querySelector('.sem-cab.hoje'));
+
+  // eventos
+  d.getElementById('btn-evento').click(); await espera(50);
+  d.getElementById('ev-data').value = '2026-11-08'; // domingo
+  d.getElementById('ev-tipo').value = 'trabalho';
+  d.getElementById('ev-disc').value = 'INE5680';
+  d.getElementById('ev-texto').value = 'Relatório';
+  d.getElementById('form-evento').requestSubmit(); await espera(100);
+  ok('evento salvo', st().eventos.length === 1 && st().eventos[0].codigo === 'INE5680');
+  const chip = d.querySelector('.chip-ev.meu');
+  ok('evento de domingo aparece na semana', !!chip && chip.textContent.includes('Entrega INE5680'));
+  ok('evento usa cor da disciplina', chip?.getAttribute('style').includes('--c3'));
+  ok('evento na lista de próximas datas', d.getElementById('feriados').textContent.includes('Entrega INE5680'));
+  d.querySelector('#feriados .remover').click(); await espera(50);
+  ok('remover evento', st().eventos.length === 0);
+
+  // tema
+  const html = d.documentElement;
+  d.getElementById('btn-tema').click(); const t1 = html.dataset.theme;
+  d.getElementById('btn-tema').click(); const t2 = html.dataset.theme;
+  d.getElementById('btn-tema').click(); const t3 = html.dataset.theme;
+  ok('tema alterna claro → escuro → auto', t1 === 'light' && t2 === 'dark' && t3 === undefined, `${t1},${t2},${t3}`);
+  d.getElementById('btn-tema').click(); d.getElementById('btn-tema').click();
+  d = await carregar();
+  ok('tema persiste', d.documentElement.dataset.theme === 'dark');
+  ok('fundo escuro aplicado', getComputedStyle(d.body).backgroundColor === 'rgb(11, 18, 34)', getComputedStyle(d.body).backgroundColor);
+
+  // relatório
+  let copiado = '';
+  Object.defineProperty(f.contentWindow.navigator, 'clipboard', { value: { writeText: async x => { copiado = x; } } });
+  const c5 = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('INE5625'));
+  c5.querySelector('button[data-delta="1"]').click(); await espera(50);
+  d.getElementById('btn-backup').click(); await espera(200);
+  ok('relatório copiado e formatado', copiado.startsWith('📚 *faltas.ufsc*') && copiado.includes('✅ 1/16 faltas'));
+  ok('toast de confirmação', !d.getElementById('toast').hidden);
+  f.contentWindow.localStorage.removeItem('faltas-ufsc:v1');
+  d = await carregar();
+  d.getElementById('texto').value = 'Encaminhada\n' + copiado + '\n[22:01, 22/10/2026]';
+  d.getElementById('btn-importar').click(); await espera(200);
+  ok('colar relatório num aparelho vazio restaura tudo', d.querySelectorAll('.disc').length === 4 && st().faltas.INE5625 === 1 && d.querySelectorAll('.sem-aula').length === 7);
+
+  // apagar
+  f.contentWindow.confirm = () => true;
+  d.getElementById('btn-apagar').click(); await espera(100);
+  ok('apagar dados volta pra importação', !d.getElementById('importar').hidden && !st());
+
+  // grade diurna
+  d.getElementById('texto').value = montarGrade(GRADE_DIURNA);
+  d.getElementById('btn-importar').click(); await espera(200);
+  const mtm = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('MTM3101'));
+  ok('diurna: MTM3101 com dias de 4 e 2 aulas', mtm.textContent.includes('Seg — 4 aulas') && mtm.textContent.includes('Qua — 2 aulas'));
+  ok('diurna: faixa de dias 5–11', mtm.querySelector('.numero').textContent.trim() === '5–11', mtm.querySelector('.numero').textContent);
+  ok('diurna: blocos de manhã e tarde na semana', [...d.querySelectorAll('.sem-aula')].some(b => b.textContent.includes('07:30–11:00')) && [...d.querySelectorAll('.sem-aula')].some(b => b.textContent.includes('16:20–18:00')));
+  ok('diurna: ECV5215 em 2 blocos separados na terça', [...d.querySelectorAll('.sem-aula')].filter(b => b.textContent.includes('ECV5215')).length === 2);
+
+  // migração de formato antigo
+  const antigo = st(); antigo.faltas = { MTM3101: { 1: 1, 3: 1, avulsas: 1 }, QMC5125: 2.5 };
+  f.contentWindow.localStorage.setItem('faltas-ufsc:v1', JSON.stringify(antigo));
+  d = await carregar();
+  ok('migração do formato antigo', st().faltas === undefined ? false : true);
+  const mig = JSON.parse(f.contentWindow.localStorage.getItem('faltas-ufsc:v1'));
+  const telaMTM = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('MTM3101')).querySelector('input').value;
+  const telaQMC = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('QMC5125')).querySelector('input').value;
+  ok('migração: dias antigos viram aulas (4+2+1=7) e 2,5→3', telaMTM === '7' && telaQMC === '3', `${telaMTM}, ${telaQMC}`);
+
+  // celular
+  f.style.width = '390px'; await espera(200);
+  ok('celular: cards em 1 coluna', getComputedStyle(d.getElementById('disciplinas')).gridTemplateColumns.split(' ').length === 1);
+  ok('celular: sem rolagem horizontal da página', d.documentElement.scrollWidth <= 390, String(d.documentElement.scrollWidth));
+
+  ok('nenhum erro de JS', erros.length === 0, erros.join(' | '));
+} catch (e) {
+  res.push('FAIL exceção: ' + e.message + ' ' + e.stack);
+}
+document.getElementById('res').textContent = res.join('\n') + `\n\n${res.filter(r => r.startsWith('PASS')).length}/${res.length} passaram`;
+</script>
