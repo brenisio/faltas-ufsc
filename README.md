@@ -15,3 +15,5 @@ Site estático sem build. Para rodar local: `python3 -m http.server` e abrir `ht
 Testes do parser, calendário e relatório: `npm test`. Teste de ponta a ponta no navegador: subir o servidor local e abrir `http://localhost:8000/test/e2e.html` (mostra PASS/FAIL de cada fluxo).
 
 Novo semestre: adicionar o calendário em `calendario.js` (início, fim, dias não letivos).
+
+Detalhes de regras, formato de dados e testes: [NOTAS.md](NOTAS.md).
