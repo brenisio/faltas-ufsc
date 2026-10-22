@@ -341,6 +341,12 @@ function meusEventos(s) {
   return (estado.eventos ?? []).filter(e => e.data === s);
 }
 
+// Evento ligado a uma disciplina usa a cor dela.
+function corDoEvento(e) {
+  const i = estado.disciplinas.findIndex(d => d.codigo === e.codigo);
+  return i >= 0 ? `--meu: var(--c${i % 6}); --meu-bg: color-mix(in srgb, var(--c${i % 6}) 22%, var(--card))` : '';
+}
+
 function rotuloMeu(e) {
   return `${TIPOS[e.tipo] ?? 'Evento'}${e.codigo ? ` ${e.codigo}` : ''}${e.texto ? `: ${e.texto}` : ''}`;
 }
@@ -351,7 +357,7 @@ function chipsDoDia(cal, s, fora) {
   const ev = eventoDoDia(cal, s);
   if (ev) out.push(`<span class="chip-ev evento">${esc(ev.texto)}</span>`);
   if (fora && !cal.naoLetivos[s]) out.push('<span class="chip-ev fora">Fora do semestre</span>');
-  for (const e of meusEventos(s)) out.push(`<span class="chip-ev meu ${e.tipo}" title="${esc(rotuloMeu(e))}">${esc(rotuloMeu(e))}</span>`);
+  for (const e of meusEventos(s)) out.push(`<span class="chip-ev meu ${e.tipo}" style="${corDoEvento(e)}" title="${esc(rotuloMeu(e))}">${esc(rotuloMeu(e))}</span>`);
   return out.join('');
 }
 
