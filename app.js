@@ -1,4 +1,5 @@
 import { parseGrade } from './parser.js';
+import { SLOTS, TIPOS, montarRelatorio, lerRelatorio } from './relatorio.js';
 import { CALENDARIOS, data, ehLetivo, iso, diasLetivosPorSemana, limiteFaltas } from './calendario.js';
 
 const CHAVE = 'faltas-ufsc:v1';
@@ -50,12 +51,15 @@ function mostrarImportar(cancelavel) {
 $('btn-importar').onclick = async () => {
   try {
     const texto = $('texto').value.trim();
-    const backup = texto.match(/#d=([\w-]+)/)?.[1] ?? (/^[\w-]{40,}$/.test(texto) ? texto : null);
-    if (backup) {
-      estado = migrar(await decodificar(backup));
+    if (/faltas\.ufsc/.test(texto)) {
+      const r = lerRelatorio(texto);
+      if (!r.disciplinas.length) throw new Error('Não achei disciplinas nesse relatório.');
+      if (estado && !confirm(`Restaurar o relatório de ${r.perfil.nome ?? 'aluno'}? Isso substitui os dados deste aparelho.`)) return;
+      estado = { ...r, diasConfiaveis: r.disciplinas.every(d => d.encontros.length) };
       salvar();
       $('importar').hidden = true;
       render();
+      avisar('Relatório restaurado.');
       return;
     }
     const { perfil, disciplinas, diasConfiaveis } = parseGrade(texto);
@@ -72,41 +76,29 @@ $('btn-importar').onclick = async () => {
 };
 $('btn-cancelar').onclick = () => { $('importar').hidden = true; };
 
-// ---------- backup por link ----------
-// O estado inteiro vai comprimido (deflate) e em base64url no #hash do link, então
-// nada passa por servidor: o link é o próprio backup.
+// ---------- relatório / backup ----------
 
-async function codificar(obj) {
-  const fluxo = new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
-  const bytes = new Uint8Array(await new Response(fluxo).arrayBuffer());
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-async function decodificar(txt) {
-  try {
-    const bytes = Uint8Array.from(atob(txt.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-    const fluxo = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-    const e = JSON.parse(await new Response(fluxo).text());
-    if (!e?.disciplinas) throw new Error();
-    return e;
-  } catch {
-    throw new Error('Link de backup inválido ou incompleto.');
-  }
+function situacao(d) {
+  const cal = calendario();
+  const { limite } = cal ? limiteFaltas(cal, d.encontros) : { limite: Math.floor(18 * aulasSemana(d) * 0.25) };
+  const sobra = limite - faltasDe(d);
+  const menor = Math.min(...d.encontros.map(e => e.aulas));
+  const pct = limite ? faltasDe(d) / limite : 1;
+  if (sobra < 0) return { emoji: '❌', texto: 'reprovado por falta', limite };
+  if (sobra < menor) return { emoji: '⚠️', texto: sobra ? `no limite (cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'aula')})` : 'no limite', limite };
+  return { emoji: pct >= 0.75 ? '🟡' : '✅', texto: `pode faltar mais ${plural(Math.floor(sobra / menor), 'dia')}`, limite };
 }
 
 $('btn-backup').onclick = async () => {
-  const link = `${location.origin}${location.pathname}#d=${await codificar(estado)}`;
-  const msg = `Minhas faltas UFSC (${estado.perfil?.semestre ?? ''}) — abra pra carregar:\n${link}`;
+  const msg = montarRelatorio(estado, situacao, calendario()?.rotulo ?? estado.perfil?.semestre);
   if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-    try { await navigator.share({ title: 'Backup faltas.ufsc', text: msg }); return; } catch { /* cancelou: cai no copiar */ }
+    try { await navigator.share({ text: msg }); return; } catch { /* cancelou: cai no copiar */ }
   }
   try {
     await navigator.clipboard.writeText(msg);
-    avisar('Link copiado! Cole no WhatsApp e abra no celular.');
+    avisar('Relatório copiado! Cole no WhatsApp.');
   } catch {
-    prompt('Copie o link de backup:', link);
+    prompt('Copie o relatório:', msg);
   }
 };
 
@@ -118,20 +110,6 @@ function avisar(txt) {
   avisar.timer = setTimeout(() => { t.hidden = true; }, 3500);
 }
 
-async function abrirBackupDoLink() {
-  const cod = location.hash.match(/^#d=([\w-]+)/)?.[1];
-  if (!cod) return;
-  history.replaceState(null, '', location.pathname + location.search);
-  try {
-    const novo = migrar(await decodificar(cod));
-    if (estado && !confirm(`Carregar o backup de ${novo.perfil?.nome ?? 'aluno'}? Isso substitui os dados salvos neste aparelho.`)) return;
-    estado = novo;
-    salvar();
-    avisar('Backup carregado.');
-  } catch (e) {
-    avisar(e.message);
-  }
-}
 $('btn-reimportar').onclick = () => mostrarImportar(true);
 $('btn-apagar').onclick = () => {
   if (!confirm('Apagar a grade e as faltas salvas neste navegador?')) return;
@@ -298,7 +276,6 @@ $('disciplinas').addEventListener('change', ev => {
 
 // ---------- semana (estilo agenda) ----------
 
-const SLOTS = ['07:30', '08:20', '09:10', '10:10', '11:00', '13:30', '14:20', '15:10', '16:20', '17:10', '18:30', '19:20', '20:20', '21:10'];
 let segundaRef = null;
 
 function segundaDe(d) {
@@ -407,7 +384,6 @@ function aulasDoDia(d) {
   return out;
 }
 
-const TIPOS = { prova: 'Prova', trabalho: 'Entrega', outro: 'Lembrete' };
 
 function meusEventos(s) {
   return (estado.eventos ?? []).filter(e => e.data === s);
@@ -555,4 +531,4 @@ $('btn-tema').onclick = () => {
 };
 aplicarTema(document.documentElement.dataset.theme ?? '');
 
-abrirBackupDoLink().finally(render);
+render();

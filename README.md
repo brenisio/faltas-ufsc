@@ -7,7 +7,7 @@ Contador de faltas para alunos de graduação da UFSC: https://brenisio.github.i
 3. O site identifica as disciplinas, os dias da semana e calcula o limite de faltas
    (25% das aulas previstas, descontando feriados do Calendário Acadêmico 2026, campus Florianópolis).
 
-Tudo roda no navegador; as faltas ficam salvas em `localStorage`.
+Tudo roda no navegador; as faltas ficam salvas em `localStorage`. O botão "Copiar relatório" gera uma mensagem pro WhatsApp que também é backup: colar ela no site restaura grade, faltas e eventos (útil pra levar pro celular).
 
 ## Desenvolvimento
 
