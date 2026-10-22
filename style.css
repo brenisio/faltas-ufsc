@@ -11,6 +11,8 @@
   --feriado-bg: #fde8e7;
   --evento-bg: #fff4d6;
   --aula-bg: #e6efff;
+  --meu: #8a3ffc;
+  --meu-bg: #efe5ff;
   --c0: #1f5fbf; --c1: #8a3ffc; --c2: #0f8a7e; --c3: #d1495b; --c4: #c27c0e; --c5: #4b6584;
   color-scheme: light;
 }
@@ -29,6 +31,8 @@
     --feriado-bg: #4a2422;
     --evento-bg: #43391a;
     --aula-bg: #1d2d4a;
+    --meu: #b38bff;
+    --meu-bg: #2e2347;
     --c0: #6ea1ff; --c1: #b38bff; --c2: #3cc7b8; --c3: #ff7a8a; --c4: #f0b04a; --c5: #9fb3c8;
     color-scheme: dark;
   }
@@ -122,13 +126,21 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 
 /* disciplinas */
 .grade-disc {
+  --cols: 3;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: 12px;
   margin-bottom: 16px;
 }
 .grade-disc .cartao { margin: 0; }
-.disc { border-top: 4px solid var(--cor); display: flex; flex-direction: column; }
+.disc { border-top: 4px solid var(--cor); display: flex; flex-direction: column; padding: 14px; }
+.disc h3 { font-size: 0.95rem; line-height: 1.3; min-height: 2.6em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.disc header p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.disc .pequeno { margin-top: auto; padding-top: 6px; }
+.disc header p { font-size: 0.82rem; }
+.disc .status { font-size: 0.88rem; }
+@media (max-width: 860px) { .grade-disc { grid-template-columns: repeat(min(var(--cols), 2), minmax(0, 1fr)); } }
+@media (max-width: 520px) { .grade-disc { grid-template-columns: 1fr; } .disc h3 { min-height: 0; } }
 .disc header p { margin: 2px 0 0; font-size: 0.9rem; }
 .codigo { font: 600 0.8rem ui-monospace, monospace; color: var(--cor); }
 
@@ -152,19 +164,24 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   padding: 2px;
 }
 
-.contador { display: flex; align-items: center; gap: 8px; margin-top: auto; }
-.contador button { min-width: 44px; height: 44px; font-size: 1.1rem; font-weight: 600; padding: 0 10px; }
-.numero { flex: 1; display: flex; align-items: baseline; gap: 6px; }
-.numero input {
-  width: 3.2ch;
-  font: 700 2rem/1 system-ui, sans-serif;
-  border: 0;
-  background: transparent;
+.placar { display: flex; align-items: baseline; gap: 6px; padding-top: 10px; }
+.placar .numero { font: 700 2rem/1 system-ui, sans-serif; }
+
+.dias-falta { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.linha-dia { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+.linha-dia select {
+  font: inherit;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
   color: var(--text);
-  text-align: right;
-  -moz-appearance: textfield;
+  padding: 3px 2px;
 }
-.numero input::-webkit-inner-spin-button, .numero input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.linha-dia .muted { flex: 1; white-space: nowrap; }
+.linha-dia button { width: 32px; height: 32px; padding: 0; font-weight: 700; }
+.linha-dia button:disabled { opacity: 0.35; cursor: default; }
+.nd { min-width: 1.6em; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .barra { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 12px; }
 .barra span { display: block; height: 100%; background: var(--ok); transition: width .2s; }
@@ -220,9 +237,9 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
 .semana-scroll { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
 .semana {
   display: grid;
-  grid-template-columns: 48px repeat(6, minmax(78px, 1fr));
+  grid-template-columns: 44px repeat(6, minmax(76px, 1fr)) minmax(76px, 1fr);
   column-gap: 4px;
-  min-width: 540px;
+  min-width: 620px;
 }
 .sem-cab {
   display: flex;
@@ -268,3 +285,53 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
 .sem-aula.cancelada .sem-nome { text-decoration: line-through; }
 .sem-aula.cancelada::after { content: "sem aula"; font-size: 0.68rem; font-weight: 600; color: var(--bad); }
 @media (max-width: 600px) { .sem-nome { display: none; } }
+
+.sem-eventos { grid-row: 2; display: flex; flex-direction: column; gap: 3px; padding: 6px 0 4px; min-width: 0; }
+.chip-ev {
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 3px 6px;
+  border-radius: 5px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+.chip-ev.feriado { background: var(--feriado-bg); color: var(--bad); }
+.chip-ev.evento { background: var(--evento-bg); color: var(--warn); }
+.chip-ev.fora { background: var(--bg); color: var(--muted); }
+.chip-ev.meu { background: var(--meu-bg); color: var(--meu); }
+.chip-ev.meu.prova { background: var(--meu); color: #fff; }
+.feriados li.evento span { color: var(--warn); }
+.feriados li.feriado span { color: var(--bad); }
+.feriados li.meu span { color: var(--meu); }
+.remover { padding: 0 8px; margin-left: 6px; line-height: 1.4; color: var(--muted); }
+.bolinha.meu { background: var(--meu); }
+.dia.meu { position: relative; }
+.dia.meu::after { content: ""; position: absolute; bottom: 3px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--meu); }
+
+.form-evento {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.form-evento label { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; color: var(--muted); }
+.form-evento .largo, .form-evento .acoes { grid-column: 1 / -1; margin-top: 0; }
+.form-evento input, .form-evento select {
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 8px;
+  min-width: 0;
+}
+@media (max-width: 600px) { .form-evento { grid-template-columns: 1fr; } }

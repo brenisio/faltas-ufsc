@@ -51,11 +51,28 @@
             <p id="sem-rotulo" class="muted"></p>
           </div>
           <div class="nav">
+            <button id="btn-evento" class="primario">+ Evento</button>
             <button id="sem-ant" aria-label="Semana anterior">‹</button>
             <button id="sem-hoje">Hoje</button>
             <button id="sem-prox" aria-label="Próxima semana">›</button>
           </div>
         </div>
+        <form id="form-evento" class="form-evento" hidden>
+          <label>Data <input type="date" id="ev-data" required></label>
+          <label>Tipo
+            <select id="ev-tipo">
+              <option value="prova">Prova</option>
+              <option value="trabalho">Entrega de trabalho</option>
+              <option value="outro">Lembrete</option>
+            </select>
+          </label>
+          <label>Disciplina <select id="ev-disc"></select></label>
+          <label class="largo">Descrição <input type="text" id="ev-texto" maxlength="80" placeholder="ex.: P1, relatório do lab…"></label>
+          <div class="acoes">
+            <button type="submit" class="primario">Salvar</button>
+            <button type="button" id="ev-cancelar" class="secundario">Cancelar</button>
+          </div>
+        </form>
         <div class="semana-scroll"><div id="semana" class="semana"></div></div>
       </section>
 
@@ -65,10 +82,11 @@
           <span><i class="bolinha aula"></i>dia com aula</span>
           <span><i class="bolinha feriado"></i>feriado / não letivo</span>
           <span><i class="bolinha evento"></i>evento acadêmico</span>
+          <span><i class="bolinha meu"></i>seus eventos</span>
         </div>
         <div id="calendario" class="meses"></div>
         <p id="dia-detalhe" class="dia-detalhe muted">Toque num dia para ver as aulas.</p>
-        <h3>Próximos feriados</h3>
+        <h3>Próximas datas</h3>
         <ul id="feriados" class="feriados"></ul>
       </section>
     </section>
