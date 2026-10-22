@@ -341,7 +341,7 @@ function renderSemana(cal) {
     html += `<div class="sem-cab ${cls}" style="grid-column:${o + 2}">
       <span class="sem-dia">${DIAS_CURTO[d.getDay()]}</span><span class="sem-num">${d.getDate()}</span>
     </div>`;
-    html += `<div class="sem-eventos" style="grid-column:${o + 2}">${chipsDoDia(cal, s, fora && o < 6)}</div>`;
+    html += `<div class="sem-eventos" style="grid-column:${o + 2}" title="${esc(chipsTexto(cal, s, fora && o < 6))}">${chipsDoDia(cal, s, fora && o < 6)}</div>`;
     html += `<div class="sem-col ${cls}" style="grid-column:${o + 2};grid-row:${L0} / span ${max - min + 1}"></div>`;
   }
   for (let r = min; r <= max; r++) {
@@ -379,7 +379,8 @@ function renderSemana(cal) {
       }
     }
   }
-  $('semana').style.gridTemplateRows = `auto auto repeat(${max - min + 1}, minmax(34px, auto))`;
+  // alturas fixas: trocar de semana (feriado, eventos, aula cancelada) não mexe no resto da página
+  $('semana').style.gridTemplateRows = `auto 46px repeat(${max - min + 1}, 42px)`;
   $('semana').innerHTML = html;
   renderAgora(cal, blocos, agora);
 }
@@ -462,6 +463,10 @@ function rotuloMeu(e) {
   return `${TIPOS[e.tipo] ?? 'Evento'}${e.codigo ? ` ${e.codigo}` : ''}${e.texto ? `: ${e.texto}` : ''}`;
 }
 
+function chipsTexto(cal, s, fora) {
+  return [cal.naoLetivos[s], eventoDoDia(cal, s)?.texto, fora && !cal.naoLetivos[s] && 'Fora do semestre', ...meusEventos(s).map(rotuloMeu)].filter(Boolean).join(' · ');
+}
+
 function chipsDoDia(cal, s, fora) {
   const out = [];
   if (cal.naoLetivos[s]) out.push(`<span class="chip-ev feriado">${esc(cal.naoLetivos[s])} · sem aula</span>`);
@@ -469,7 +474,7 @@ function chipsDoDia(cal, s, fora) {
   if (ev) out.push(`<span class="chip-ev evento">${esc(ev.texto)}</span>`);
   if (fora && !cal.naoLetivos[s]) out.push('<span class="chip-ev fora">Fora do semestre</span>');
   for (const e of meusEventos(s)) out.push(`<span class="chip-ev meu ${e.tipo}" style="${corDoEvento(e)}" title="${esc(rotuloMeu(e))}">${esc(rotuloMeu(e))}</span>`);
-  return out.join('');
+  return out.length > 2 ? out[0] + `<span class="chip-ev mais">+${out.length - 1}</span>` : out.join('');
 }
 
 function eventoDoDia(cal, s) {
