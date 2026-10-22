@@ -210,3 +210,61 @@ h3 + .feriados { margin-top: 8px; }
 .cartao h3:not(.disc h3) { margin-top: 18px; }
 
 footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
+
+/* semana */
+.semana-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.semana-topo h2 { margin: 0; }
+.semana-topo p { margin: 2px 0 12px; font-size: 0.9rem; }
+.nav { display: flex; gap: 6px; }
+.nav button { padding: 6px 12px; }
+.semana-scroll { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+.semana {
+  display: grid;
+  grid-template-columns: 48px repeat(6, minmax(78px, 1fr));
+  column-gap: 4px;
+  min-width: 540px;
+}
+.sem-cab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px 8px;
+  border-bottom: 1px solid var(--line);
+  grid-row: 1;
+  text-align: center;
+}
+.sem-dia { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.sem-num { font-size: 1.35rem; font-weight: 600; width: 2.1em; height: 2.1em; display: grid; place-items: center; border-radius: 50%; }
+.sem-cab.hoje .sem-num { background: var(--accent); color: #fff; }
+.sem-cab.hoje .sem-dia { color: var(--accent); font-weight: 600; }
+.sem-cab.feriado .sem-num { color: var(--bad); }
+.sem-cab.fora { opacity: 0.5; }
+.sem-tag { font-size: 0.7rem; line-height: 1.2; margin-top: 2px; padding: 2px 6px; border-radius: 4px; background: var(--bg); color: var(--muted); }
+.sem-tag.feriado { background: var(--feriado-bg); color: var(--bad); font-weight: 600; }
+.sem-tag.evento { background: var(--evento-bg); color: var(--warn); font-weight: 600; }
+.sem-col { grid-row: 2; border-radius: 6px; }
+.sem-col.feriado { background: repeating-linear-gradient(135deg, var(--feriado-bg) 0 8px, transparent 8px 16px); }
+.sem-col.fora { background: var(--bg); }
+.sem-col.hoje { background: var(--aula-bg); opacity: 0.45; }
+.sem-hora { grid-column: 1; font-size: 0.72rem; color: var(--muted); padding-top: 4px; border-top: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+.sem-aula {
+  position: relative;
+  margin: 3px 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border-left: 4px solid var(--cor);
+  background: color-mix(in srgb, var(--cor) 16%, var(--card));
+  font-size: 0.78rem;
+  line-height: 1.3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+.sem-aula strong { font-family: ui-monospace, monospace; color: var(--cor); }
+.sem-nome { font-weight: 500; }
+.sem-info { color: var(--muted); font-size: 0.72rem; }
+.sem-aula.cancelada { background: var(--bg); border-left-style: dashed; opacity: 0.6; }
+.sem-aula.cancelada .sem-nome { text-decoration: line-through; }
+.sem-aula.cancelada::after { content: "sem aula"; font-size: 0.68rem; font-weight: 600; color: var(--bad); }
+@media (max-width: 600px) { .sem-nome { display: none; } }

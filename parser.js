@@ -73,10 +73,11 @@ export function parseGrade(texto) {
     }
     const d = porCodigo.get(a.codigo);
     const dia = diasConfiaveis ? a.dia : null;
-    const e = d.encontros.find(x => x.dia === dia && dia != null);
-    if (e) e.aulas++;
-    else if (dia == null && d.encontros[0]) d.encontros[0].aulas++;
-    else d.encontros.push({ dia, aulas: 1 });
+    const e = d.encontros.find(x => x.dia === dia && dia != null) ?? (dia == null ? d.encontros[0] : undefined);
+    if (e) {
+      e.aulas++;
+      e.horas.push(a.hora);
+    } else d.encontros.push({ dia, aulas: 1, horas: [a.hora], local: a.local });
   }
   const disciplinas = [...porCodigo.values()];
   if (!disciplinas.length) throw new Error('Não encontrei nenhuma disciplina na grade.');
