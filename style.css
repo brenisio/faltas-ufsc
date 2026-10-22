@@ -506,3 +506,56 @@ footer p { margin: 0 0 4px; }
 .recolhivel > .recolher { margin-bottom: 12px; }
 .fechada .corpo, .fechada .so-aberto, .fechada #sem-rotulo { display: none; }
 .fechada > .recolher, .fechada .semana-topo p { margin-bottom: 0; }
+
+/* agora (horário de Brasília) */
+.sem-agora {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.sem-agora strong { font: 500 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); }
+.sem-agora .ponto { display: inline-block; }
+.rot {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--sutil);
+  color: var(--text);
+}
+.rot.ao-vivo { background: var(--bad); color: #fff; }
+.rot.em-breve { background: var(--warn-bg); color: var(--warn); }
+.agora-cel { position: relative; pointer-events: none; z-index: 3; }
+.agora { position: absolute; left: -2px; right: -2px; height: 2px; background: var(--bad); transform: translateY(-1px); }
+.agora::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bad);
+}
+.agora span {
+  position: absolute;
+  right: 2px;
+  top: -16px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--bad);
+  font-variant-numeric: tabular-nums;
+  background: var(--card);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+.sem-aula.atual { box-shadow: 0 0 0 1.5px var(--cor); }

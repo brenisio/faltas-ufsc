@@ -7,8 +7,8 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 localStorage.clear();
 const f = document.createElement('iframe'); f.style.width = '1200px'; f.style.height = '900px';
 const erros = [];
-async function carregar() {
-  await new Promise(r => { f.onload = r; f.src = '../index.html?' + Math.random(); if (!f.isConnected) document.body.append(f); });
+async function carregar(qs = '') {
+  await new Promise(r => { f.onload = r; f.src = '../index.html?' + qs + '&r=' + Math.random(); if (!f.isConnected) document.body.append(f); });
   f.contentWindow.addEventListener('error', e => erros.push(e.message));
   await espera(300);
   return f.contentDocument;
@@ -64,6 +64,17 @@ try {
   ok('semana após o fim mostra fora do semestre', !!d.querySelector('.chip-ev.fora'));
   d.getElementById('sem-hoje').click(); await espera(50);
   ok('botão Hoje volta pra semana atual', !!d.querySelector('.sem-cab.hoje'));
+
+  // horário atual (Brasília), simulado
+  d = await carregar('agora=2026-10-22T19:05');
+  ok('linha do agora na quinta 19:05', !!d.querySelector('.agora-cel') && d.querySelector('.agora span').textContent === '19:05');
+  ok('aula atual destacada', d.querySelector('.sem-aula.atual')?.textContent.includes('INE5680'));
+  ok('aviso Agora', d.getElementById('sem-agora').textContent.includes('Agora') && d.getElementById('sem-agora').textContent.includes('até 20:10'));
+  d = await carregar('agora=2026-10-22T18:10');
+  ok('aviso Próxima em 20 min', d.getElementById('sem-agora').textContent.includes('em 20 min') && !!d.querySelector('.rot.em-breve'));
+  d = await carregar('agora=2026-10-28T19:00');
+  ok('feriado de hoje no aviso', d.getElementById('sem-agora').textContent.includes('Dia do Servidor'));
+  d = await carregar();
 
   // eventos
   d.getElementById('btn-evento').click(); await espera(50);

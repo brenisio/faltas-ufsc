@@ -296,7 +296,7 @@ function ddmm(d) {
 }
 
 function semanaInicial(cal) {
-  const hoje = iso(new Date());
+  const hoje = agoraBR().iso;
   if (hoje < cal.inicio) return segundaDe(data(cal.inicio));
   if (hoje > cal.fim) return segundaDe(data(cal.fim));
   return segundaDe(new Date());
@@ -347,19 +347,85 @@ function renderSemana(cal) {
   for (let r = min; r <= max; r++) {
     html += `<div class="sem-hora" style="grid-row:${r - min + L0}">${SLOTS[r]}</div>`;
   }
+  const agora = agoraBR();
+  const ehHoje = b => {
+    const d = new Date(segundaRef);
+    d.setDate(d.getDate() + b.dia - 1);
+    return iso(d) === agora.iso;
+  };
+  const atual = blocos.find(b => ehHoje(b) && agora.min >= minutos(SLOTS[b.ini]) && agora.min < minutos(SLOTS[b.fim]) + 50);
   for (const b of blocos) {
     const d = new Date(segundaRef);
     d.setDate(d.getDate() + b.dia - 1);
     const cancelada = !ehLetivo(cal, d);
-    html += `<div class="sem-aula ${cancelada ? 'cancelada' : ''}" style="--cor: var(--c${b.i % 12});grid-column:${b.dia + 1};grid-row:${b.ini - min + L0} / span ${b.fim - b.ini + 1}"
+    html += `<div class="sem-aula ${cancelada ? 'cancelada' : ''} ${b === atual && !cancelada ? 'atual' : ''}" style="--cor: var(--c${b.i % 12});grid-column:${b.dia + 1};grid-row:${b.ini - min + L0} / span ${b.fim - b.ini + 1}"
       title="${esc(b.disc.nome)}${cancelada ? ' (sem aula)' : ''}">
       <strong>${esc(b.disc.codigo)}</strong>
       <span class="sem-nome">${esc(b.disc.nome)}</span>
       <span class="sem-info">${SLOTS[b.ini]}–${fimAula(SLOTS[b.fim])}${b.local ? ` · ${esc(b.local.replace(/^.*\//, ''))}` : ''}</span>
     </div>`;
   }
+  // linha do horário atual (Brasília) na coluna de hoje
+  const offsetHoje = Math.round((data(agora.iso) - segundaRef) / 864e5);
+  if (offsetHoje >= 0 && offsetHoje < 7) {
+    for (let r = min; r <= max; r++) {
+      const ini = minutos(SLOTS[r]);
+      const prox = r < max ? minutos(SLOTS[r + 1]) : ini + 50;
+      if (agora.min >= ini && agora.min < prox) {
+        const frac = ((agora.min - ini) / (prox - ini)) * 100;
+        html += `<div class="agora-cel" style="grid-column:${offsetHoje + 2};grid-row:${r - min + L0}">
+          <div class="agora" style="top:${frac}%"><span>${agora.hhmm}</span></div></div>`;
+        break;
+      }
+    }
+  }
   $('semana').style.gridTemplateRows = `auto auto repeat(${max - min + 1}, minmax(34px, auto))`;
   $('semana').innerHTML = html;
+  renderAgora(cal, blocos, agora);
+}
+
+// Hora oficial de Brasília, independente do fuso do aparelho.
+function agoraBR() {
+  // ?agora=2026-10-22T19:05 simula um horário (testes/demonstração)
+  const sim = new URLSearchParams(location.search).get('agora')?.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/);
+  if (sim) return { iso: sim[1], min: Number(sim[2]) * 60 + Number(sim[3]), hhmm: `${sim[2]}:${sim[3]}` };
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date()).map(x => [x.type, x.value]));
+  return { iso: `${p.year}-${p.month}-${p.day}`, min: Number(p.hour) * 60 + Number(p.minute), hhmm: `${p.hour}:${p.minute}` };
+}
+
+// Aviso "Agora / Próxima aula" de hoje.
+function renderAgora(cal, blocos, agora) {
+  const el = $('sem-agora');
+  const hojeD = data(agora.iso);
+  const feriado = cal.naoLetivos[agora.iso];
+  const hoje = blocos
+    .filter(b => b.dia === hojeD.getDay())
+    .map(b => ({ ...b, iniMin: minutos(SLOTS[b.ini]), fimMin: minutos(SLOTS[b.fim]) + 50 }))
+    .sort((a, b) => a.iniMin - b.iniMin);
+  const local = b => b.local ? ` · ${esc(b.local.replace(/^.*\//, ''))}` : '';
+  const nome = b => `<i class="ponto" style="--cor: var(--c${b.i % 12})"></i><strong>${esc(b.disc.codigo)}</strong> ${esc(b.disc.nome)}`;
+  let html = '';
+  if (hoje.length && feriado) {
+    html = `<span class="rot">Hoje</span> ${esc(feriado)}: sem aula`;
+  } else if (hoje.length && ehLetivo(cal, hojeD)) {
+    const atual = hoje.find(b => agora.min >= b.iniMin && agora.min < b.fimMin);
+    const prox = hoje.find(b => b.iniMin > agora.min);
+    if (atual) {
+      html = `<span class="rot ao-vivo">Agora</span> ${nome(atual)}${local(atual)} · até ${fimAula(SLOTS[atual.fim])} (${duracao(atual.fimMin - agora.min)})`;
+    } else if (prox) {
+      const falta = prox.iniMin - agora.min;
+      html = `<span class="rot ${falta <= 30 ? 'em-breve' : ''}">Próxima</span> ${nome(prox)}${local(prox)} · ${SLOTS[prox.ini]} (em ${duracao(falta)})`;
+    }
+  }
+  el.innerHTML = html;
+  el.hidden = !html;
+}
+
+function duracao(m) {
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? String(m % 60).padStart(2, '0') : ''}`;
 }
 
 function moverSemana(dias) {
@@ -550,3 +616,4 @@ $('btn-tema').onclick = () => {
 aplicarTema(document.documentElement.dataset.theme ?? '');
 
 render();
+setInterval(() => { if (estado && calendario()) renderSemana(calendario()); }, 60_000);
