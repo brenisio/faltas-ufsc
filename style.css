@@ -168,20 +168,10 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .placar .numero { font: 700 2rem/1 system-ui, sans-serif; }
 
 .dias-falta { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-.linha-dia { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
-.linha-dia select {
-  font: inherit;
-  font-weight: 600;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  padding: 3px 2px;
-}
-.linha-dia .muted { flex: 1; white-space: nowrap; }
-.linha-dia button { width: 32px; height: 32px; padding: 0; font-weight: 700; }
+.linha-dia { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+.linha-dia .rotulo { flex: 1; color: var(--muted); white-space: nowrap; }
+.linha-dia button { min-width: 38px; height: 32px; padding: 0 6px; font-weight: 700; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 .linha-dia button:disabled { opacity: 0.35; cursor: default; }
-.nd { min-width: 1.6em; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .barra { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 12px; }
 .barra span { display: block; height: 100%; background: var(--ok); transition: width .2s; }
@@ -335,5 +325,3 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
   min-width: 0;
 }
 @media (max-width: 600px) { .form-evento { grid-template-columns: 1fr; } }
-.linha-dia.avulsas { border-top: 1px dashed var(--line); padding-top: 6px; }
-.dias-falta-cab { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
