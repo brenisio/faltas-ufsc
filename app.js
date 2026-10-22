@@ -95,9 +95,8 @@ function render() {
   }
 }
 
-// Faltas = total de aulas faltadas na disciplina (atraso/meia presença = 1 aula).
-// "Dia inteiro" soma de uma vez as aulas que a disciplina tem num dia; o destaque do
-// cartão é quantos dias de aula ainda dá pra faltar.
+// Faltas = total de aulas faltadas na disciplina, como os pontos de presença do Moodle
+// (atraso/meia presença = 1). "+2"/"+4" lança um encontro inteiro de uma vez.
 
 function faltasDe(d) {
   return Number(estado.faltas[d.codigo]) || 0;
@@ -136,11 +135,11 @@ function renderDisciplinas(cal) {
       ? `Passou do limite (${limite} faltas): reprovação por frequência (FI).`
       : nivel === 'limite'
         ? sobra > 0
-          ? `Faltar mais um dia inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'falta')} (atrasos).`
+          ? `Faltar mais um encontro inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'falta')} (atrasos).`
           : 'No limite: mais uma falta reprova.'
         : passos.length > 1
-          ? `Dá <strong>${diasMin}–${diasMax} dias</strong> de aula (dias de ${maior} ou ${menor} aulas).`
-          : `Dá <strong>${plural(diasMax, 'dia')}</strong> de aula inteiro${diasMax === 1 ? '' : 's'} (${menor} aulas por dia).`;
+          ? `= <strong>${diasMin}–${diasMax} encontros</strong> inteiros (de ${maior} ou ${menor} aulas).`
+          : `= <strong>${plural(diasMax, 'encontro')}</strong> inteiro${diasMax === 1 ? '' : 's'} de ${menor} aulas.`;
     const soDias = maxAlcancavel(limite, passos);
     const restantes = restantesPorDia
       ? d.encontros.reduce((s, e) => s + (e.dia == null ? 0 : restantesPorDia[e.dia] * e.aulas), 0)
@@ -172,20 +171,15 @@ function renderDisciplinas(cal) {
         <div class="barra"><span style="width:${pct}%"></span></div>
         <p class="faltas-txt"><strong>${faltas}</strong> de ${limite} faltas</p>
         <div class="dias-falta">
-          ${passos.map(p => `
-            <div class="linha-dia">
-              <span class="rotulo">${passos.length > 1 ? `Dia de ${p} aulas` : 'Dia inteiro'}</span>
-              <button data-cod="${cod}" data-delta="${-p}" aria-label="Tirar um dia de ${p} aulas" ${faltas >= p ? '' : 'disabled'}>−</button>
-              <button data-cod="${cod}" data-delta="${p}" aria-label="Faltei um dia de ${p} aulas">+</button>
-            </div>`).join('')}
           <div class="linha-dia">
-            <span class="rotulo">Falta (atraso)</span>
-            <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma falta" ${faltas >= 1 ? '' : 'disabled'}>−</button>
-            <button data-cod="${cod}" data-delta="1" aria-label="Uma falta">+</button>
+            <span class="rotulo">Faltas</span>
+            <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma falta" ${faltas >= 1 ? '' : 'disabled'}>−1</button>
+            <button data-cod="${cod}" data-delta="1" aria-label="Uma falta (atraso)">+1</button>
+            ${passos.map(p => `<button data-cod="${cod}" data-delta="${p}" aria-label="Faltei o encontro de ${p} aulas">+${p}</button>`).join('')}
           </div>
         </div>
         <p class="status">${status}</p>
-        <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${soDias !== limite ? ` (faltando só dias inteiros, ${soDias})` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
+        <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${soDias !== limite ? ` (faltando só encontros inteiros, ${soDias})` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
       </article>`;
   }).join('');
 }
