@@ -17,6 +17,7 @@ function carregar() {
     if (f && typeof f === 'object') {
       e.faltas[d.codigo] = d.encontros.reduce((s, x) => s + (f[String(x.dia ?? 'x')] ?? 0) * x.aulas, f.avulsas ?? 0);
     }
+    if (typeof e.faltas?.[d.codigo] === 'number') e.faltas[d.codigo] = Math.ceil(e.faltas[d.codigo]); // não há mais meia falta
   }
   return e;
 }
@@ -94,8 +95,9 @@ function render() {
   }
 }
 
-// Faltas = total de aulas faltadas na disciplina (aceita meia falta, por atraso).
-// "Dia inteiro" soma de uma vez as aulas que a disciplina tem num dia.
+// Faltas = total de aulas faltadas na disciplina (atraso/meia presença = 1 aula).
+// "Dia inteiro" soma de uma vez as aulas que a disciplina tem num dia; o destaque do
+// cartão é quantos dias de aula ainda dá pra faltar.
 
 function faltasDe(d) {
   return Number(estado.faltas[d.codigo]) || 0;
@@ -109,12 +111,9 @@ function maxAlcancavel(limite, passos) {
 }
 
 function plural(n, s, p = s + 's') {
-  return `${fmt(n)} ${n === 1 ? s : p}`;
+  return `${n} ${n === 1 ? s : p}`;
 }
 
-function fmt(n) {
-  return String(n).replace('.', ',');
-}
 
 function renderDisciplinas(cal) {
   const hoje = iso(new Date());
@@ -130,15 +129,19 @@ function renderDisciplinas(cal) {
     const sobra = limite - faltas;
     const pct = Math.min(100, limite ? (faltas / limite) * 100 : 100);
     const nivel = sobra < 0 ? 'reprovado' : sobra < menor ? 'limite' : pct >= 75 ? 'alerta' : 'ok';
-    const dias = Math.floor(sobra / menor);
+    const maior = Math.max(...passos);
+    const diasMin = Math.max(0, Math.floor(sobra / maior));
+    const diasMax = Math.max(0, Math.floor(sobra / menor));
+    const diasTxt = diasMin === diasMax ? `${diasMax}` : `${diasMin}–${diasMax}`;
     const status = nivel === 'reprovado'
-      ? `Passou do limite (${limite}): reprovação por frequência (FI).`
+      ? `Passou do limite (${limite} faltas): reprovação por frequência (FI).`
       : nivel === 'limite'
         ? sobra > 0
-          ? `Faltar mais um dia inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'falta')} avulsa${sobra > 1 ? 's' : ''}.`
+          ? `Faltar mais um dia inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'falta')} (atrasos).`
           : 'No limite: mais uma falta reprova.'
-        : `Pode faltar mais <strong>${plural(sobra, 'falta')}</strong>` +
-          (passos.length === 1 ? ` (${plural(dias, 'dia')} de ${menor} aulas).` : '.');
+        : passos.length > 1
+          ? `${diasMax} dias se forem dias de ${menor} aulas, ${diasMin} se forem de ${maior}.`
+          : `Cada dia faltado = ${menor} faltas.`;
     const soDias = maxAlcancavel(limite, passos);
     const restantes = restantesPorDia
       ? d.encontros.reduce((s, e) => s + (e.dia == null ? 0 : restantesPorDia[e.dia] * e.aulas), 0)
@@ -153,39 +156,48 @@ function renderDisciplinas(cal) {
           <p class="muted">${esc(d.professor)}</p>
         </header>
         <div class="encontros">
-          ${d.encontros.map((e, k) => `
+          ${d.encontros.map((e, k) => e.dia == null ? `
             <label class="chip">
               <select data-cod="${cod}" data-k="${k}" aria-label="Dia da semana">
-                ${e.dia == null ? '<option value="">dia?</option>' : ''}
-                ${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}" ${e.dia === n ? 'selected' : ''}>${DIAS_CURTO[n]}</option>`).join('')}
+                <option value="">dia?</option>
+                ${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}">${DIAS_CURTO[n]}</option>`).join('')}
               </select>
               ${plural(e.aulas, 'aula')}
-            </label>`).join('')}
+            </label>` : '').join('')}
+          ${resumoDias(d)}
         </div>
         <div class="placar">
-          <span class="numero">${fmt(faltas)}</span>
-          <span class="muted">de ${limite} faltas</span>
+          <span class="numero">${nivel === 'reprovado' ? '—' : diasTxt}</span>
+          <span class="muted">${nivel === 'reprovado' ? 'reprovado por falta' : `dia${diasMax === 1 ? '' : 's'} que ainda dá pra faltar`}</span>
         </div>
         <div class="barra"><span style="width:${pct}%"></span></div>
+        <p class="faltas-txt"><strong>${faltas}</strong> de ${limite} faltas</p>
         <div class="dias-falta">
           ${passos.map(p => `
             <div class="linha-dia">
-              <span class="rotulo">Dia inteiro${passos.length > 1 ? ` (${p})` : ''}</span>
-              <button data-cod="${cod}" data-delta="${-p}" aria-label="Tirar um dia de ${p} aulas" ${faltas >= p ? '' : 'disabled'}>−${p}</button>
-              <button data-cod="${cod}" data-delta="${p}" aria-label="Faltei um dia de ${p} aulas">+${p}</button>
+              <span class="rotulo">${passos.length > 1 ? `Dia de ${p} aulas` : 'Dia inteiro'}</span>
+              <button data-cod="${cod}" data-delta="${-p}" aria-label="Tirar um dia de ${p} aulas" ${faltas >= p ? '' : 'disabled'}>−</button>
+              <button data-cod="${cod}" data-delta="${p}" aria-label="Faltei um dia de ${p} aulas">+</button>
             </div>`).join('')}
           <div class="linha-dia">
-            <span class="rotulo">Falta</span>
-            <button data-cod="${cod}" data-delta="-0.5" aria-label="Tirar meia falta" ${faltas >= 0.5 ? '' : 'disabled'}>−½</button>
-            <button data-cod="${cod}" data-delta="0.5" aria-label="Meia falta (atraso)">+½</button>
-            <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma falta" ${faltas >= 1 ? '' : 'disabled'}>−1</button>
-            <button data-cod="${cod}" data-delta="1" aria-label="Uma falta">+1</button>
+            <span class="rotulo">Falta (atraso)</span>
+            <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma falta" ${faltas >= 1 ? '' : 'disabled'}>−</button>
+            <button data-cod="${cod}" data-delta="1" aria-label="Uma falta">+</button>
           </div>
         </div>
         <p class="status">${status}</p>
         <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${soDias !== limite ? ` (faltando só dias inteiros, ${soDias})` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
       </article>`;
   }).join('');
+}
+
+function resumoDias(d) {
+  const conhecidos = d.encontros.filter(e => e.dia != null);
+  if (!conhecidos.length) return '';
+  const uniforme = conhecidos.every(e => e.aulas === conhecidos[0].aulas);
+  return uniforme
+    ? `<span class="chip">${conhecidos.map(e => DIAS_CURTO[e.dia]).join(' · ')} — ${conhecidos[0].aulas} aulas/dia</span>`
+    : conhecidos.map(e => `<span class="chip">${DIAS_CURTO[e.dia]} — ${plural(e.aulas, 'aula')}</span>`).join('');
 }
 
 function aulasSemana(d) {
@@ -449,5 +461,20 @@ $('feriados').addEventListener('click', ev => {
   salvar();
   render();
 });
+
+// ---------- tema ----------
+
+const TEMAS = [['', '◐ Auto'], ['light', '☀ Claro'], ['dark', '☾ Escuro']];
+function aplicarTema(t) {
+  if (t) document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  $('btn-tema').textContent = TEMAS.find(x => x[0] === t)[1];
+  try { t ? localStorage.setItem('faltas-ufsc:tema', t) : localStorage.removeItem('faltas-ufsc:tema'); } catch { /* nada */ }
+}
+$('btn-tema').onclick = () => {
+  const atual = document.documentElement.dataset.theme ?? '';
+  aplicarTema(TEMAS[(TEMAS.findIndex(x => x[0] === atual) + 1) % TEMAS.length][0]);
+};
+aplicarTema(document.documentElement.dataset.theme ?? '');
 
 render();

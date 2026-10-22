@@ -6,13 +6,22 @@
   <title>Faltas UFSC</title>
   <meta name="description" content="Contador de faltas para alunos da UFSC a partir da grade de horários do CAGR.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤓</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
+  <script>try { const t = localStorage.getItem('faltas-ufsc:tema'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
 <body>
-  <header class="topo">
-    <h1>Faltas UFSC</h1>
-    <p class="sub">Quantas aulas ainda dá pra faltar, por disciplina.</p>
-  </header>
+  <div class="faixa-topo">
+    <header class="topo">
+      <div>
+        <h1>faltas<span class="marca">.ufsc</span></h1>
+        <p class="sub">Quantos dias ainda dá pra faltar, por disciplina.</p>
+      </div>
+      <button id="btn-tema" class="tema" aria-label="Alternar tema"></button>
+    </header>
+  </div>
 
   <main>
     <section id="importar" class="cartao" hidden>
