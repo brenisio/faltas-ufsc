@@ -131,15 +131,17 @@ function renderDisciplinas(cal) {
     const maior = Math.max(...passos);
     const diasMin = Math.max(0, Math.floor(sobra / maior));
     const diasMax = Math.max(0, Math.floor(sobra / menor));
+    const emDias = n => passos.length > 1
+      ? plural(n, 'aula')
+      : [Math.floor(n / menor) && plural(Math.floor(n / menor), 'dia'), n % menor && plural(n % menor, 'aula')].filter(Boolean).join(' e ') || '0 dias';
+    const diasTxt = diasMin === diasMax ? `${diasMax}` : `${diasMin}–${diasMax}`;
     const status = nivel === 'reprovado'
-      ? `Passou do limite (${limite} faltas): reprovação por frequência (FI).`
+      ? `Passou do limite (${limite} aulas): reprovação por frequência (FI).`
       : nivel === 'limite'
         ? sobra > 0
-          ? `Faltar mais um encontro inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'falta')} (atrasos).`
-          : 'No limite: mais uma falta reprova.'
-        : passos.length > 1
-          ? `= <strong>${diasMin}–${diasMax} encontros</strong> inteiros (de ${maior} ou ${menor} aulas).`
-          : `= <strong>${plural(diasMax, 'encontro')}</strong> inteiro${diasMax === 1 ? '' : 's'} de ${menor} aulas.`;
+          ? `Faltar mais um dia inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'aula')} (atrasos).`
+          : 'No limite: mais uma aula perdida reprova.'
+        : `Ainda pode perder <strong>${plural(sobra, 'aula')}</strong>${passos.length > 1 ? ` (dias de ${maior} ou ${menor} aulas)` : ''}.`;
     const soDias = maxAlcancavel(limite, passos);
     const restantes = restantesPorDia
       ? d.encontros.reduce((s, e) => s + (e.dia == null ? 0 : restantesPorDia[e.dia] * e.aulas), 0)
@@ -165,19 +167,19 @@ function renderDisciplinas(cal) {
           ${resumoDias(d)}
         </div>
         <div class="placar">
-          <span class="numero">${nivel === 'reprovado' ? '—' : sobra}</span>
-          <span class="muted">${nivel === 'reprovado' ? 'reprovado por falta' : `falta${sobra === 1 ? '' : 's'} pra gastar`}</span>
+          <span class="numero">${nivel === 'reprovado' ? '—' : diasTxt}</span>
+          <span class="muted">${nivel === 'reprovado' ? 'reprovado por falta' : `dia${diasMax === 1 ? '' : 's'} que ainda pode faltar`}</span>
         </div>
         <div class="barra"><span style="width:${pct}%"></span></div>
-        <p class="faltas-txt"><strong>${faltas}</strong> de ${limite} faltas</p>
         <div class="dias-falta">
           <div class="linha-dia">
-            <span class="rotulo">Faltas</span>
-            <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma falta" ${faltas >= 1 ? '' : 'disabled'}>−1</button>
-            <button data-cod="${cod}" data-delta="1" aria-label="Uma falta (atraso)">+1</button>
-            ${passos.map(p => `<button data-cod="${cod}" data-delta="${p}" aria-label="Faltei o encontro de ${p} aulas">+${p}</button>`).join('')}
+            <span class="rotulo">Aulas perdidas</span>
+            <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma aula perdida" ${faltas >= 1 ? '' : 'disabled'}>−</button>
+            <input type="number" min="0" inputmode="numeric" value="${faltas}" data-cod="${cod}" aria-label="Aulas perdidas em ${cod}">
+            <button data-cod="${cod}" data-delta="1" aria-label="Mais uma aula perdida">+</button>
           </div>
         </div>
+        <p class="faltas-txt">= <strong>${emDias(faltas)}</strong> faltado${faltas === 1 ? '' : 's'} · limite ${limite} aulas</p>
         <p class="status">${status}</p>
         <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${soDias !== limite ? ` (faltando só encontros inteiros, ${soDias})` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
       </article>`;
@@ -208,6 +210,11 @@ $('disciplinas').addEventListener('click', ev => {
 
 $('disciplinas').addEventListener('change', ev => {
   const el = ev.target;
+  if (el.matches('input[type=number]')) {
+    estado.faltas[el.dataset.cod] = Math.max(0, Math.floor(Number(el.value)) || 0);
+    salvar();
+    render();
+  }
   if (el.matches('select')) {
     const d = estado.disciplinas.find(x => x.codigo === el.dataset.cod);
     d.encontros[Number(el.dataset.k)].dia = el.value ? Number(el.value) : null;

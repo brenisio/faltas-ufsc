@@ -370,3 +370,19 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
   min-width: 0;
 }
 @media (max-width: 600px) { .form-evento { grid-template-columns: 1fr; } }
+.linha-dia input {
+  width: 3.4em;
+  height: 32px;
+  font: 700 1rem system-ui, sans-serif;
+  text-align: center;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  -moz-appearance: textfield;
+}
+.linha-dia input::-webkit-inner-spin-button, .linha-dia input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.linha-dia { flex-wrap: wrap; }
+.linha-dia .rotulo { flex-basis: 100%; font-size: 0.8rem; }
+.linha-dia input { flex: 1; }
+.placar .numero { white-space: nowrap; flex-shrink: 0; }
