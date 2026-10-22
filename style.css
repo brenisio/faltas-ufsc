@@ -402,3 +402,5 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
   z-index: 10;
 }
+.dica-celular { font-size: 0.9rem; margin: 0 0 12px; }
+@media (pointer: fine) { .dica-celular { background: var(--bg); color: var(--muted); } }
