@@ -31,6 +31,7 @@
         <li>Selecione tudo (<kbd>Ctrl</kbd>+<kbd>A</kbd>) e copie (<kbd>Ctrl</kbd>+<kbd>C</kbd>).</li>
         <li>Cole aqui embaixo (<kbd>Ctrl</kbd>+<kbd>V</kbd>).</li>
       </ol>
+      <p class="muted pequeno dica">Tem um link de backup? Abra o link direto ou cole ele aqui.</p>
       <textarea id="texto" rows="8" placeholder="Cole aqui o conteúdo da página Grade de Horários…"></textarea>
       <p id="erro" class="erro" hidden></p>
       <div class="acoes">
@@ -46,6 +47,7 @@
           <span class="muted" id="p-detalhes"></span>
         </div>
         <div class="acoes">
+          <button id="btn-backup" class="secundario">Copiar link de backup</button>
           <button id="btn-reimportar" class="secundario">Reimportar grade</button>
           <button id="btn-apagar" class="secundario perigo">Apagar dados</button>
         </div>
@@ -106,6 +108,8 @@
       Calendário Acadêmico 2026 (Res. Normativa 214/2025/CUn, campus Florianópolis). Arredondamos pra baixo.</p>
     <p>Seus dados ficam só neste navegador; nada é enviado pra lugar nenhum.</p>
   </footer>
+
+  <div id="toast" class="toast" role="status" hidden></div>
 
   <script type="module" src="app.js"></script>
 </body>

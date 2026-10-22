@@ -9,8 +9,10 @@ const $ = id => document.getElementById(id);
 let estado = carregar();
 
 function carregar() {
-  let e;
-  try { e = JSON.parse(localStorage.getItem(CHAVE)); } catch { return null; }
+  try { return migrar(JSON.parse(localStorage.getItem(CHAVE))); } catch { return null; }
+}
+
+function migrar(e) {
   // versão anterior guardava dias faltados por dia da semana: { [dia]: n, avulsas }
   for (const d of e?.disciplinas ?? []) {
     const f = e.faltas?.[d.codigo];
@@ -45,9 +47,18 @@ function mostrarImportar(cancelavel) {
   $('texto').focus();
 }
 
-$('btn-importar').onclick = () => {
+$('btn-importar').onclick = async () => {
   try {
-    const { perfil, disciplinas, diasConfiaveis } = parseGrade($('texto').value);
+    const texto = $('texto').value.trim();
+    const backup = texto.match(/#d=([\w-]+)/)?.[1] ?? (/^[\w-]{40,}$/.test(texto) ? texto : null);
+    if (backup) {
+      estado = migrar(await decodificar(backup));
+      salvar();
+      $('importar').hidden = true;
+      render();
+      return;
+    }
+    const { perfil, disciplinas, diasConfiaveis } = parseGrade(texto);
     const faltas = {};
     for (const d of disciplinas) faltas[d.codigo] = estado?.faltas?.[d.codigo] ?? 0;
     estado = { perfil, disciplinas, diasConfiaveis, faltas, eventos: estado?.eventos ?? [] };
@@ -60,6 +71,67 @@ $('btn-importar').onclick = () => {
   }
 };
 $('btn-cancelar').onclick = () => { $('importar').hidden = true; };
+
+// ---------- backup por link ----------
+// O estado inteiro vai comprimido (deflate) e em base64url no #hash do link, então
+// nada passa por servidor: o link é o próprio backup.
+
+async function codificar(obj) {
+  const fluxo = new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+  const bytes = new Uint8Array(await new Response(fluxo).arrayBuffer());
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function decodificar(txt) {
+  try {
+    const bytes = Uint8Array.from(atob(txt.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    const fluxo = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    const e = JSON.parse(await new Response(fluxo).text());
+    if (!e?.disciplinas) throw new Error();
+    return e;
+  } catch {
+    throw new Error('Link de backup inválido ou incompleto.');
+  }
+}
+
+$('btn-backup').onclick = async () => {
+  const link = `${location.origin}${location.pathname}#d=${await codificar(estado)}`;
+  const msg = `Minhas faltas UFSC (${estado.perfil?.semestre ?? ''}) — abra pra carregar:\n${link}`;
+  if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+    try { await navigator.share({ title: 'Backup faltas.ufsc', text: msg }); return; } catch { /* cancelou: cai no copiar */ }
+  }
+  try {
+    await navigator.clipboard.writeText(msg);
+    avisar('Link copiado! Cole no WhatsApp e abra no celular.');
+  } catch {
+    prompt('Copie o link de backup:', link);
+  }
+};
+
+function avisar(txt) {
+  const t = $('toast');
+  t.textContent = txt;
+  t.hidden = false;
+  clearTimeout(avisar.timer);
+  avisar.timer = setTimeout(() => { t.hidden = true; }, 3500);
+}
+
+async function abrirBackupDoLink() {
+  const cod = location.hash.match(/^#d=([\w-]+)/)?.[1];
+  if (!cod) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    const novo = migrar(await decodificar(cod));
+    if (estado && !confirm(`Carregar o backup de ${novo.perfil?.nome ?? 'aluno'}? Isso substitui os dados salvos neste aparelho.`)) return;
+    estado = novo;
+    salvar();
+    avisar('Backup carregado.');
+  } catch (e) {
+    avisar(e.message);
+  }
+}
 $('btn-reimportar').onclick = () => mostrarImportar(true);
 $('btn-apagar').onclick = () => {
   if (!confirm('Apagar a grade e as faltas salvas neste navegador?')) return;
@@ -483,4 +555,4 @@ $('btn-tema').onclick = () => {
 };
 aplicarTema(document.documentElement.dataset.theme ?? '');
 
-render();
+abrirBackupDoLink().finally(render);

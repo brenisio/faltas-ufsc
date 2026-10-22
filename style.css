@@ -386,3 +386,19 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
 .linha-dia .rotulo { flex-basis: 100%; font-size: 0.8rem; }
 .linha-dia input { flex: 1; }
 .placar .numero { white-space: nowrap; flex-shrink: 0; }
+.dica { margin: -4px 0 10px; }
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  background: var(--header-bg);
+  color: var(--header-text);
+  border: 1px solid var(--brand);
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+  z-index: 10;
+}
