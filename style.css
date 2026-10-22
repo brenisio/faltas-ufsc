@@ -1,41 +1,72 @@
 :root {
-  --bg: #f6f7f9;
-  --card: #ffffff;
-  --text: #1b1f24;
-  --muted: #5f6b78;
-  --line: #e2e6eb;
-  --accent: #1f5fbf;
-  --ok: #1e8a4c;
-  --warn: #c27c0e;
-  --bad: #c7362f;
-  --feriado-bg: #fde8e7;
-  --evento-bg: #fff4d6;
-  --aula-bg: #e6efff;
-  --meu: #8a3ffc;
-  --meu-bg: #efe5ff;
-  --c0: #1f5fbf; --c1: #8a3ffc; --c2: #0f8a7e; --c3: #d1495b; --c4: #c27c0e; --c5: #4b6584;
+  --bg: #f3efe6;
+  --card: #fffcf5;
+  --text: #17213a;
+  --muted: #646b7d;
+  --line: #e3dccd;
+  --accent: #1d4ea8;
+  --on-accent: #ffffff;
+  --brand: #e2a225;
+  --ok: #1f8a52;
+  --warn: #b8740c;
+  --bad: #c43a31;
+  --feriado-bg: #fbe3df;
+  --evento-bg: #fbefcf;
+  --aula-bg: #e3ebfa;
+  --meu: #7b3fe4;
+  --meu-bg: #ede3ff;
+  --c0: #1d4ea8; --c1: #7b3fe4; --c2: #0d8576; --c3: #cc3f58; --c4: #b8740c; --c5: #3f5f86;
+  --header-bg: #17213a;
+  --header-text: #f3efe6;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111418;
-    --card: #1a1f25;
-    --text: #e8ecf0;
-    --muted: #98a4b1;
-    --line: #2b323a;
-    --accent: #6ea1ff;
-    --ok: #4cc27f;
-    --warn: #f0b04a;
-    --bad: #ff6b63;
-    --feriado-bg: #4a2422;
-    --evento-bg: #43391a;
-    --aula-bg: #1d2d4a;
-    --meu: #b38bff;
-    --meu-bg: #2e2347;
-    --c0: #6ea1ff; --c1: #b38bff; --c2: #3cc7b8; --c3: #ff7a8a; --c4: #f0b04a; --c5: #9fb3c8;
+    --bg: #0b1222;
+    --card: #121b30;
+    --text: #e8ecf6;
+    --muted: #8c99b8;
+    --line: #22304f;
+    --accent: #f3b63f;
+    --on-accent: #1a1406;
+    --brand: #f3b63f;
+    --ok: #4fd18b;
+    --warn: #f3b63f;
+    --bad: #ff6f66;
+    --feriado-bg: #3a1a26;
+    --evento-bg: #33290f;
+    --aula-bg: #18284a;
+    --meu: #c09cff;
+    --meu-bg: #2a2150;
+    --c0: #73a6ff; --c1: #c09cff; --c2: #41d1bf; --c3: #ff7d93; --c4: #f3b63f; --c5: #9db4d4;
+    --header-bg: #070c18;
+    --header-text: #e8ecf6;
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b1222;
+  --card: #121b30;
+  --text: #e8ecf6;
+  --muted: #8c99b8;
+  --line: #22304f;
+  --accent: #f3b63f;
+  --on-accent: #1a1406;
+  --brand: #f3b63f;
+  --ok: #4fd18b;
+  --warn: #f3b63f;
+  --bad: #ff6f66;
+  --feriado-bg: #3a1a26;
+  --evento-bg: #33290f;
+  --aula-bg: #18284a;
+  --meu: #c09cff;
+  --meu-bg: #2a2150;
+  --c0: #73a6ff; --c1: #c09cff; --c2: #41d1bf; --c3: #ff7d93; --c4: #f3b63f; --c5: #9db4d4;
+  --header-bg: #070c18;
+  --header-text: #e8ecf6;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -45,7 +76,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 .topo, main, footer {
@@ -54,11 +85,20 @@ body {
   padding: 0 16px;
 }
 
-.topo { padding-top: 28px; }
-h1 { margin: 0; font-size: 1.7rem; letter-spacing: -0.02em; }
-h2 { margin: 0 0 12px; font-size: 1.15rem; }
+.faixa-topo { background: var(--header-bg); color: var(--header-text); margin-bottom: 20px; border-bottom: 3px solid var(--brand); }
+.topo { padding-top: 22px; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+h1 { margin: 0; font: 800 1.9rem/1.1 "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -0.03em; }
+h1 .marca { color: var(--brand); }
+h2, h3 { font-family: "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -0.01em; }
+h2 { margin: 0 0 12px; font-size: 1.25rem; }
 h3 { margin: 0; font-size: 1rem; }
-.sub { margin: 4px 0 20px; color: var(--muted); }
+.sub { margin: 6px 0 0; opacity: 0.75; }
+.tema {
+  background: transparent;
+  color: var(--header-text);
+  border-color: color-mix(in srgb, var(--header-text) 30%, transparent);
+  white-space: nowrap;
+}
 .muted { color: var(--muted); }
 .pequeno { font-size: 0.85rem; margin: 6px 0 0; }
 a { color: var(--accent); }
@@ -102,7 +142,7 @@ button {
   padding: 8px 14px;
 }
 button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.primario { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.primario { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .perigo { color: var(--bad); }
 .acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 
@@ -164,13 +204,18 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   padding: 2px;
 }
 
-.placar { display: flex; align-items: baseline; gap: 6px; padding-top: 10px; }
-.placar .numero { font: 700 2rem/1 system-ui, sans-serif; }
+.placar { display: flex; align-items: baseline; gap: 8px; padding-top: 4px; }
+.faltas-txt { margin: 8px 0 0; font-size: 0.88rem; color: var(--muted); }
+.faltas-txt strong { color: var(--text); }
+.placar .numero { font: 800 2.6rem/1 "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -0.03em; color: var(--ok); }
+.nivel-alerta .placar .numero { color: var(--warn); }
+.nivel-limite .placar .numero, .nivel-reprovado .placar .numero { color: var(--bad); }
+.placar .muted { font-size: 0.85rem; line-height: 1.2; }
 
 .dias-falta { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 .linha-dia { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
 .linha-dia .rotulo { flex: 1; color: var(--muted); white-space: nowrap; }
-.linha-dia button { min-width: 38px; height: 32px; padding: 0 6px; font-weight: 700; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.linha-dia button { min-width: 40px; height: 32px; padding: 0 6px; font-weight: 700; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 .linha-dia button:disabled { opacity: 0.35; cursor: default; }
 
 .barra { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 12px; }
@@ -242,7 +287,7 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
 }
 .sem-dia { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .sem-num { font-size: 1.35rem; font-weight: 600; width: 2.1em; height: 2.1em; display: grid; place-items: center; border-radius: 50%; }
-.sem-cab.hoje .sem-num { background: var(--accent); color: #fff; }
+.sem-cab.hoje .sem-num { background: var(--accent); color: var(--on-accent); }
 .sem-cab.hoje .sem-dia { color: var(--accent); font-weight: 600; }
 .sem-cab.feriado .sem-num { color: var(--bad); }
 .sem-cab.fora { opacity: 0.5; }
@@ -293,7 +338,7 @@ footer { font-size: 0.85rem; color: var(--muted); padding-bottom: 32px; }
 .chip-ev.evento { background: var(--evento-bg); color: var(--warn); }
 .chip-ev.fora { background: var(--bg); color: var(--muted); }
 .chip-ev.meu { background: var(--meu-bg); color: var(--meu); }
-.chip-ev.meu.prova { background: var(--meu); color: #fff; }
+.chip-ev.meu.prova { background: var(--meu); color: var(--card); }
 .feriados li.evento span { color: var(--warn); }
 .feriados li.feriado span { color: var(--bad); }
 .feriados li.meu span { color: var(--meu); }

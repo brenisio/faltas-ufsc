@@ -1,0 +1,12 @@
+<meta charset="utf-8"><style>body{margin:0}iframe{border:0;width:100%;height:3400px}</style>
+<script type="module">
+import { parseGrade } from './parser.js';
+import { montarGrade, GRADE_DIURNA } from './test/montar-grade.mjs';
+const q = new URLSearchParams(location.search);
+const t = q.get('g') === 'diurno' ? montarGrade(GRADE_DIURNA) : await (await fetch('test/grade-exemplo.txt')).text();
+const g = parseGrade(t);
+const faltas = q.get('g') === 'diurno' ? { MTM3101: 10, ECV5215: 16 } : { INE5625: 5, EGC5010: 8, INE5624: 7.5 };
+localStorage.setItem('faltas-ufsc:v1', JSON.stringify({ ...g, faltas, eventos: [{ id: 'a', data: '2026-10-22', tipo: 'prova', codigo: 'INE5625', texto: 'P1' }] }));
+localStorage.setItem('faltas-ufsc:tema', q.get('t'));
+const f = document.createElement('iframe'); f.src = 'index.html'; document.body.append(f);
+</script>
