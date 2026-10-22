@@ -46,7 +46,7 @@ try {
   const inp3 = card().querySelector('input'); inp3.value = '-5'; inp3.dispatchEvent(new Event('change', { bubbles: true })); await espera(50);
   ok('valor negativo vira 0', st().faltas.EGC5010 === 0);
   const ine = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('INE5625'));
-  ok('INE5625: 8 dias e limite 16', ine.querySelector('.numero').textContent.trim() === '8' && ine.textContent.includes('limite 16 aulas'));
+  ok('INE5625: 8 dias e limite 16', ine.querySelector('.numero').textContent.trim() === '8' && ine.textContent.includes('0 de 16 aulas'));
 
   // persistência
   d = await carregar();
@@ -89,7 +89,7 @@ try {
   d.getElementById('btn-tema').click(); d.getElementById('btn-tema').click();
   d = await carregar();
   ok('tema persiste', d.documentElement.dataset.theme === 'dark');
-  ok('fundo escuro aplicado', getComputedStyle(d.body).backgroundColor === 'rgb(11, 18, 34)', getComputedStyle(d.body).backgroundColor);
+  ok('fundo escuro aplicado', getComputedStyle(d.body).backgroundColor === 'rgb(13, 13, 14)', getComputedStyle(d.body).backgroundColor);
 
   // relatório
   let copiado = '';
@@ -114,7 +114,7 @@ try {
   d.getElementById('texto').value = montarGrade(GRADE_DIURNA);
   d.getElementById('btn-importar').click(); await espera(200);
   const mtm = [...d.querySelectorAll('.disc')].find(c => c.textContent.includes('MTM3101'));
-  ok('diurna: MTM3101 com dias de 4 e 2 aulas', mtm.textContent.includes('Seg — 4 aulas') && mtm.textContent.includes('Qua — 2 aulas'));
+  ok('diurna: MTM3101 com dias de 4 e 2 aulas', mtm.textContent.includes('Seg 4, Qua 2 aulas'));
   ok('diurna: faixa de dias 5–11', mtm.querySelector('.numero').textContent.trim() === '5–11', mtm.querySelector('.numero').textContent);
   ok('diurna: blocos de manhã e tarde na semana', [...d.querySelectorAll('.sem-aula')].some(b => b.textContent.includes('07:30–11:00')) && [...d.querySelectorAll('.sem-aula')].some(b => b.textContent.includes('16:20–18:00')));
   ok('diurna: ECV5215 em 2 blocos separados na terça', [...d.querySelectorAll('.sem-aula')].filter(b => b.textContent.includes('ECV5215')).length === 2);

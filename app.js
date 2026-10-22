@@ -181,57 +181,54 @@ function renderDisciplinas(cal) {
     const maior = Math.max(...passos);
     const diasMin = Math.max(0, Math.floor(sobra / maior));
     const diasMax = Math.max(0, Math.floor(sobra / menor));
-    const emDias = n => passos.length > 1
-      ? plural(n, 'aula')
-      : [Math.floor(n / menor) && plural(Math.floor(n / menor), 'dia'), n % menor && plural(n % menor, 'aula')].filter(Boolean).join(' e ') || '0 dias';
     const diasTxt = diasMin === diasMax ? `${diasMax}` : `${diasMin}–${diasMax}`;
-    const status = nivel === 'reprovado'
-      ? `Passou do limite (${limite} aulas): reprovação por frequência (FI).`
+    const selo = { alerta: 'Atenção', limite: 'No limite', reprovado: 'Reprovado' }[nivel];
+    const aviso = nivel === 'reprovado'
+      ? `Passou do limite de ${limite} aulas (FI).`
       : nivel === 'limite'
-        ? sobra > 0
-          ? `Faltar mais um dia inteiro reprova. Ainda cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'aula')} (atrasos).`
-          : 'No limite: mais uma aula perdida reprova.'
-        : `Ainda pode perder <strong>${plural(sobra, 'aula')}</strong>${passos.length > 1 ? ` (dias de ${maior} ou ${menor} aulas)` : ''}.`;
+        ? sobra > 0 ? `Mais um dia inteiro reprova. Cabe${sobra > 1 ? 'm' : ''} ${plural(sobra, 'aula')}.` : 'Mais uma aula perdida reprova.'
+        : '';
     const soDias = maxAlcancavel(limite, passos);
     const restantes = restantesPorDia
       ? d.encontros.reduce((s, e) => s + (e.dia == null ? 0 : restantesPorDia[e.dia] * e.aulas), 0)
       : null;
     const cod = esc(d.codigo);
+    const seletores = d.encontros.map((e, k) => e.dia == null ? `
+      <select data-cod="${cod}" data-k="${k}" aria-label="Dia da semana">
+        <option value="">dia? (${e.aulas} aulas)</option>
+        ${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}">${DIAS_CURTO[n]}</option>`).join('')}
+      </select>` : '').join('');
 
     return `
       <article class="cartao disc nivel-${nivel}" style="--cor: var(--c${i % 6})">
-        <header>
-          <span class="codigo">${cod}</span>
-          <h3>${esc(d.nome)}</h3>
-          <p class="muted">${esc(d.professor)}</p>
-        </header>
-        <div class="encontros">
-          ${d.encontros.map((e, k) => e.dia == null ? `
-            <label class="chip">
-              <select data-cod="${cod}" data-k="${k}" aria-label="Dia da semana">
-                <option value="">dia?</option>
-                ${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}">${DIAS_CURTO[n]}</option>`).join('')}
-              </select>
-              ${plural(e.aulas, 'aula')}
-            </label>` : '').join('')}
-          ${resumoDias(d)}
+        <div class="disc-topo">
+          <span class="codigo"><i class="ponto"></i>${cod}</span>
+          ${selo ? `<span class="selo">${selo}</span>` : ''}
         </div>
+        <h3 title="${esc(d.nome)}">${esc(d.nome)}</h3>
+        <p class="disc-meta">${esc(d.professor)}</p>
+        <p class="disc-meta">${resumoDias(d)}${seletores}</p>
+
         <div class="placar">
-          <span class="numero">${nivel === 'reprovado' ? '—' : diasTxt}</span>
-          <span class="muted">${nivel === 'reprovado' ? 'reprovado por falta' : `dia${diasMax === 1 ? '' : 's'} que ainda pode faltar`}</span>
+          <span class="numero">${nivel === 'reprovado' ? '0' : diasTxt}</span>
+          <span class="placar-rotulo">${diasMax === 1 && diasMin === 1 ? 'dia' : 'dias'} pra faltar</span>
         </div>
-        <div class="barra"><span style="width:${pct}%"></span></div>
-        <div class="dias-falta">
-          <div class="linha-dia">
-            <span class="rotulo">Aulas perdidas</span>
+        <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="${limite}" aria-valuenow="${faltas}"><span style="width:${pct}%"></span></div>
+        <div class="barra-legenda">
+          <span>${faltas} de ${limite} aulas</span>
+          ${restantes != null ? `<span>${restantes} por vir</span>` : ''}
+        </div>
+
+        <div class="passo">
+          <span>Aulas perdidas</span>
+          <div class="stepper">
             <button data-cod="${cod}" data-delta="-1" aria-label="Tirar uma aula perdida" ${faltas >= 1 ? '' : 'disabled'}>−</button>
             <input type="number" min="0" inputmode="numeric" value="${faltas}" data-cod="${cod}" aria-label="Aulas perdidas em ${cod}">
             <button data-cod="${cod}" data-delta="1" aria-label="Mais uma aula perdida">+</button>
           </div>
         </div>
-        <p class="faltas-txt">= <strong>${emDias(faltas)}</strong> faltado${faltas === 1 ? '' : 's'} · limite ${limite} aulas</p>
-        <p class="status">${status}</p>
-        <p class="muted pequeno">${total} aulas no semestre · limite 25% = ${limite}${soDias !== limite ? ` (faltando só encontros inteiros, ${soDias})` : ''}${restantes != null ? ` · ${restantes} ainda por vir` : ''}</p>
+        ${aviso ? `<p class="status">${aviso}</p>` : ''}
+        <p class="rodape" title="${total} aulas no semestre · 25% = ${limite}${soDias !== limite ? ` · faltando só dias inteiros, ${soDias}` : ''}">${total} aulas no semestre · máx. ${limite} faltas</p>
       </article>`;
   }).join('');
 }
@@ -241,8 +238,8 @@ function resumoDias(d) {
   if (!conhecidos.length) return '';
   const uniforme = conhecidos.every(e => e.aulas === conhecidos[0].aulas);
   return uniforme
-    ? `<span class="chip">${conhecidos.map(e => DIAS_CURTO[e.dia]).join(' · ')} — ${conhecidos[0].aulas} aulas/dia</span>`
-    : conhecidos.map(e => `<span class="chip">${DIAS_CURTO[e.dia]} — ${plural(e.aulas, 'aula')}</span>`).join('');
+    ? `${conhecidos.map(e => DIAS_CURTO[e.dia]).join(', ')} · ${conhecidos[0].aulas} aulas/dia`
+    : conhecidos.map(e => `${DIAS_CURTO[e.dia]} ${e.aulas}`).join(', ') + ' aulas';
 }
 
 function aulasSemana(d) {
@@ -518,7 +515,7 @@ $('feriados').addEventListener('click', ev => {
 
 // ---------- tema ----------
 
-const TEMAS = [['', '◐ Auto'], ['light', '☀ Claro'], ['dark', '☾ Escuro']];
+const TEMAS = [['', 'Tema: auto'], ['light', 'Tema: claro'], ['dark', 'Tema: escuro']];
 function aplicarTema(t) {
   if (t) document.documentElement.dataset.theme = t;
   else delete document.documentElement.dataset.theme;
