@@ -8,20 +8,18 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤓</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
   <script>try { const t = localStorage.getItem('faltas-ufsc:tema'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
 <body>
-  <div class="faixa-topo">
-    <header class="topo">
-      <div>
-        <h1>faltas<span class="marca">.ufsc</span></h1>
-        <p class="sub">Quantos dias ainda dá pra faltar em cada disciplina.</p>
-      </div>
-      <button id="btn-tema" class="tema" aria-label="Alternar tema"></button>
-    </header>
-  </div>
+  <header class="topo">
+    <div class="marca-bloco">
+      <span class="logo">faltas<span class="marca">.ufsc</span></span>
+      <span class="sub">Quantos dias ainda dá pra faltar em cada disciplina</span>
+    </div>
+    <button id="btn-tema" class="tema" aria-label="Alternar tema"></button>
+  </header>
 
   <main>
     <section id="importar" class="cartao" hidden>
@@ -44,13 +42,13 @@
     </section>
 
     <section id="painel" hidden>
-      <div class="perfil cartao">
+      <div class="perfil">
         <div>
           <strong id="p-nome"></strong>
           <span class="muted" id="p-detalhes"></span>
         </div>
         <div class="acoes">
-          <button id="btn-backup" class="secundario">📋 Copiar relatório</button>
+          <button id="btn-backup" class="secundario">Copiar relatório</button>
           <button id="btn-reimportar" class="secundario">Reimportar grade</button>
           <button id="btn-apagar" class="secundario perigo">Apagar dados</button>
         </div>
