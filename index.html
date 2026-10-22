@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faltas UFSC</title>
+  <meta name="description" content="Contador de faltas para alunos da UFSC a partir da grade de horários do CAGR.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Faltas UFSC</h1>
+    <p class="sub">Quantas aulas ainda dá pra faltar, por disciplina.</p>
+  </header>
+
+  <main>
+    <section id="importar" class="cartao" hidden>
+      <h2>Importar sua grade</h2>
+      <ol class="passos">
+        <li>Abra a <a href="https://cagr.sistemas.ufsc.br/modules/aluno/grade/" target="_blank" rel="noopener">Grade de Horários no CAGR</a> e faça login.</li>
+        <li>Selecione tudo (<kbd>Ctrl</kbd>+<kbd>A</kbd>) e copie (<kbd>Ctrl</kbd>+<kbd>C</kbd>).</li>
+        <li>Cole aqui embaixo (<kbd>Ctrl</kbd>+<kbd>V</kbd>).</li>
+      </ol>
+      <textarea id="texto" rows="8" placeholder="Cole aqui o conteúdo da página Grade de Horários…"></textarea>
+      <p id="erro" class="erro" hidden></p>
+      <div class="acoes">
+        <button id="btn-importar" class="primario">Importar</button>
+        <button id="btn-cancelar" class="secundario" hidden>Cancelar</button>
+      </div>
+    </section>
+
+    <section id="painel" hidden>
+      <div class="perfil cartao">
+        <div>
+          <strong id="p-nome"></strong>
+          <span class="muted" id="p-detalhes"></span>
+        </div>
+        <div class="acoes">
+          <button id="btn-reimportar" class="secundario">Reimportar grade</button>
+          <button id="btn-apagar" class="secundario perigo">Apagar dados</button>
+        </div>
+      </div>
+      <p id="aviso" class="aviso" hidden></p>
+      <div id="disciplinas" class="grade-disc"></div>
+
+      <section class="cartao">
+        <h2>Calendário <span id="cal-rotulo" class="muted"></span></h2>
+        <div class="legenda">
+          <span><i class="bolinha aula"></i>dia com aula</span>
+          <span><i class="bolinha feriado"></i>feriado / não letivo</span>
+          <span><i class="bolinha evento"></i>evento acadêmico</span>
+        </div>
+        <div id="calendario" class="meses"></div>
+        <p id="dia-detalhe" class="dia-detalhe muted">Toque num dia para ver as aulas.</p>
+        <h3>Próximos feriados</h3>
+        <ul id="feriados" class="feriados"></ul>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <p>Frequência mínima na UFSC: 75%. O limite é 25% das aulas previstas no semestre, contadas pelo
+      Calendário Acadêmico 2026 (Res. Normativa 214/2025/CUn, campus Florianópolis). Arredondamos pra baixo.</p>
+    <p>Seus dados ficam só neste navegador; nada é enviado pra lugar nenhum.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
